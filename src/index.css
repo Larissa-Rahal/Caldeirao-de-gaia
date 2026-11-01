@@ -1,0 +1,43 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    /* Evita salto de barra de scroll em desktop */
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply text-gray-900 bg-gray-50;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    /* Impede bounce scroll em iOS que causa efeitos visuais estranhos */
+    overscroll-behavior: none;
+  }
+
+  /* Safe area para notch e home indicator (iOS) */
+  .safe-top    { padding-top:    env(safe-area-inset-top); }
+  .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+@layer utilities {
+  /* Esconder barra de scroll mantendo scroll funcional */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Altura da viewport em mobile (dvh com fallback) */
+  .min-h-dvh {
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
