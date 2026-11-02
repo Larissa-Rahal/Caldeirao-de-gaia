@@ -34,7 +34,7 @@ export function Header({
 
   return (
     <>
-      <header className="grimoire-header sticky top-0 z-40 border-b border-[#C59B27]/35 backdrop-blur-md">
+      <header className="grimoire-header sticky top-0 z-40 border-b border-gold/35 backdrop-blur-md">
         <div className="w-full max-w-7xl mx-auto flex items-center justify-between gap-3 px-4 sm:px-8 h-14">
 
           {/* Seletor de Caldeirão */}
@@ -53,9 +53,9 @@ export function Header({
                 onClick={onOpenReceiptScanner}
                 title="Fotografar Nota Fiscal"
                 aria-label="Fotografar ou enviar nota fiscal"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#C59B27]/50 bg-[#1D122E]/80 text-[#FDE68A] hover:border-[#E5B842] transition text-xs font-medium"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gold/50 bg-header-pill/85 text-gold-bright hover:border-gold-light hover:bg-header-hover transition text-xs font-medium"
               >
-                <ReceiptText size={15} className="text-[#E5B842]" />
+                <ReceiptText size={15} className="text-gold-light" />
                 <span className="hidden sm:inline font-serif tracking-wide">Nota Fiscal</span>
               </button>
             )}
@@ -68,14 +68,14 @@ export function Header({
                 className={cn(
                   'relative flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition',
                   needsMarket > 0
-                    ? 'border-[#E5B842] bg-[#2D1F00]/90 text-[#FDE68A] hover:bg-[#3D2B00]'
-                    : 'border-[#C59B27]/40 bg-[#1D122E]/80 text-[#D8CBE8] hover:border-[#C59B27]'
+                    ? 'border-gold-light bg-header-alert/90 text-gold-bright hover:bg-header-hover'
+                    : 'border-gold/40 bg-header-pill/85 text-gold-cream hover:border-gold'
                 )}
               >
-                <ShoppingCart size={15} className="text-[#E5B842]" />
+                <ShoppingCart size={15} className="text-gold-light" />
                 <span className="hidden sm:inline font-serif tracking-wide">Mercado</span>
                 {needsMarket > 0 && (
-                  <span className="px-1.5 py-0.2 bg-[#D97706] text-white text-[11px] rounded-full font-bold leading-tight">
+                  <span className="px-1.5 py-0.2 bg-amber-600 text-white text-[11px] rounded-full font-bold leading-tight">
                     {needsMarket > 99 ? '99+' : needsMarket}
                   </span>
                 )}
@@ -86,7 +86,7 @@ export function Header({
               onClick={toggle}
               aria-label={isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
               title={isDark ? 'Tema claro' : 'Tema escuro'}
-              className="p-2 rounded-full border border-[#C59B27]/40 bg-[#1D122E]/80 text-[#E5B842] hover:border-[#E5B842] transition"
+              className="p-2 rounded-full border border-gold/40 bg-header-pill/85 text-gold-light hover:border-gold-light hover:bg-header-hover transition"
             >
               {isDark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
@@ -97,7 +97,7 @@ export function Header({
                 aria-label="Menu do utilizador"
                 aria-haspopup="true"
                 aria-expanded={menuOpen}
-                className="rounded-full ring-2 ring-[#C59B27]/70 hover:ring-[#FDE68A] transition"
+                className="rounded-full ring-2 ring-gold/70 hover:ring-gold-bright transition"
               >
                 <Avatar
                   name={profile?.full_name ?? profile?.email ?? '?'}

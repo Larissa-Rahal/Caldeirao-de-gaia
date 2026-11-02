@@ -1,91 +1,8 @@
+@import './styles/colors.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* ═══════════════════════════════════════════════════════════
-   TEMA CLARO — roxo vibrante / pergaminho alquímico
-   ═══════════════════════════════════════════════════════════ */
-:root,
-[data-theme="light"] {
-  color-scheme: light;
-
-  --bg-page:        #F7F5FC;
-  --bg-card:        #FFFFFF;
-  --bg-raised:      #F5F3FF;
-  --bg-input:       #FFFFFF;
-
-  --border-default: #ECE6F6;
-  --border-subtle:  #F0EAF8;
-  --border-glow:    rgba(124, 58, 237, 0.30);
-
-  --text-primary:   #1A1028;
-  --text-secondary: #4A3F6B;
-  --text-muted:     #8B7BAE;
-  --text-gold:      #6D28D9;
-  --text-gold-light:#7C3AED;
-
-  --accent:         #7C3AED;
-  --accent-dark:    #6D28D9;
-  --accent-glow:    rgba(124, 58, 237, 0.25);
-
-  --navbar-bg:      #5B21B6;
-  --navbar-border:  rgba(255,255,255,0.10);
-
-  --status-instock-bg:    #F0FDF4;
-  --status-instock-text:  #166534;
-  --status-instock-border:#BBF7D0;
-  --status-low-bg:        #FFFBEB;
-  --status-low-text:      #92400E;
-  --status-low-border:    #FDE68A;
-  --status-out-bg:        #FEF2F2;
-  --status-out-text:      #991B1B;
-  --status-out-border:    #FECACA;
-
-  --scrollbar-track: #F7F5FC;
-  --scrollbar-thumb: #DDD6FE;
-}
-
-/* ═══════════════════════════════════════════════════════════
-   TEMA ESCURO — grimório digital
-   ═══════════════════════════════════════════════════════════ */
-[data-theme="dark"] {
-  color-scheme: dark;
-
-  --bg-page:        #0D0818;
-  --bg-card:        #160E24;
-  --bg-raised:      #1E1530;
-  --bg-input:       #1A1228;
-
-  --border-default: #2E1F42;
-  --border-subtle:  #241937;
-  --border-glow:    rgba(157, 78, 221, 0.35);
-
-  --text-primary:   #E8DFF5;
-  --text-secondary: #A89BC2;
-  --text-muted:     #6B5F82;
-  --text-gold:      #D4A017;
-  --text-gold-light:#F0B429;
-
-  --accent:         #9D4EDD;
-  --accent-dark:    #7B2FBE;
-  --accent-glow:    rgba(157, 78, 221, 0.40);
-
-  --navbar-bg:      #120820;
-  --navbar-border:  rgba(157, 78, 221, 0.20);
-
-  --status-instock-bg:    #0D2416;
-  --status-instock-text:  #6EAF6E;
-  --status-instock-border:#1A4A2A;
-  --status-low-bg:        #2A1F00;
-  --status-low-text:      #D4A017;
-  --status-low-border:    #4A3800;
-  --status-out-bg:        #2A0A0A;
-  --status-out-text:      #E05C5C;
-  --status-out-border:    #4A1515;
-
-  --scrollbar-track: #0D0818;
-  --scrollbar-thumb: #2E1F42;
-}
 
 /* ── Base ─────────────────────────────────────────────────── */
 @layer base {
@@ -117,169 +34,96 @@
   .min-h-dvh { min-height: 100vh; min-height: 100dvh; }
   .font-serif { font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif; }
 
-  /* ── Estilo Grimório / Alquimia (Tema Escuro + Tema Claro Pergaminho) ── */
+  .drop-shadow-emblem   { filter: var(--drop-shadow-emblem); }
+  .drop-shadow-item     { filter: var(--drop-shadow-item); }
+  .drop-shadow-orb-text { filter: var(--drop-shadow-orb-text); }
+
+  /* ── Estilo Grimório / Alquimia (alimentado por src/styles/colors.css) ── */
   .grimoire-header {
-    background-color: rgba(18, 8, 32, 0.94);
-    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.55);
-  }
-  [data-theme="light"] .grimoire-header {
-    background-color: rgba(48, 27, 13, 0.96);
-    box-shadow: 0 2px 16px rgba(44, 26, 11, 0.28);
+    background-color: var(--grimoire-header-bg);
+    box-shadow: var(--grimoire-header-shadow);
   }
 
   .grimoire-shell {
-    background-color: #0E0816;
-    background-image:
-      radial-gradient(ellipse at 20% 10%, rgba(124, 58, 237, 0.16) 0%, transparent 55%),
-      radial-gradient(ellipse at 80% 90%, rgba(212, 160, 23, 0.10) 0%, transparent 55%),
-      radial-gradient(circle at 50% 50%, #170E26 0%, #0B0612 100%);
-    color: #F5E6C8;
+    background-color: var(--grimoire-shell-bg);
+    background-image: var(--grimoire-shell-image);
+    color: var(--text-primary);
     transition: background-color 0.25s ease, color 0.25s ease;
-  }
-  [data-theme="light"] .grimoire-shell {
-    background-color: #EDE0CC;
-    background-image:
-      radial-gradient(ellipse at 20% 10%, rgba(212, 160, 23, 0.18) 0%, transparent 55%),
-      radial-gradient(ellipse at 80% 90%, rgba(124, 58, 237, 0.08) 0%, transparent 55%),
-      radial-gradient(circle at 50% 50%, #F7EFE2 0%, #E2D0B5 100%);
-    color: #2C1A0B;
   }
 
   .grimoire-frame {
-    background:
-      radial-gradient(ellipse at 50% 0%, rgba(197, 155, 39, 0.08) 0%, transparent 60%),
-      linear-gradient(180deg, rgba(28, 17, 44, 0.94) 0%, rgba(17, 10, 28, 0.97) 100%);
-    box-shadow:
-      0 20px 60px rgba(0, 0, 0, 0.75),
-      inset 0 0 0 1px rgba(253, 230, 138, 0.16),
-      inset 0 0 40px rgba(0, 0, 0, 0.65);
-  }
-  [data-theme="light"] .grimoire-frame {
-    background:
-      radial-gradient(ellipse at 50% 0%, rgba(212, 160, 23, 0.14) 0%, transparent 60%),
-      linear-gradient(180deg, rgba(252, 246, 235, 0.96) 0%, rgba(242, 230, 209, 0.98) 100%);
-    box-shadow:
-      0 16px 40px rgba(74, 46, 18, 0.18),
-      inset 0 0 0 1px rgba(184, 134, 11, 0.25),
-      inset 0 0 30px rgba(184, 134, 11, 0.08);
+    background: var(--grimoire-frame-bg);
+    box-shadow: var(--grimoire-frame-shadow);
   }
 
   .grimoire-title {
-    background: linear-gradient(180deg, #FFF6D6 0%, #F3C65F 45%, #B87D14 100%);
+    background: var(--grimoire-title-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.8));
-  }
-  [data-theme="light"] .grimoire-title {
-    background: linear-gradient(180deg, #8C5811 0%, #B87D14 45%, #4A2C06 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 3px rgba(255, 248, 231, 0.9));
+    filter: var(--grimoire-title-shadow);
   }
 
-  .grimoire-section-heading { color: #E5B842; }
-  [data-theme="light"] .grimoire-section-heading { color: #784B08; }
+  .grimoire-section-heading {
+    color: var(--grimoire-section-heading-color);
+  }
 
   .grimoire-statusbar {
-    background-color: rgba(21, 13, 36, 0.95);
-    box-shadow: 0 4px 20px rgba(0,0,0,0.6), inset 0 0 12px rgba(197,155,39,0.18);
-  }
-  [data-theme="light"] .grimoire-statusbar {
-    background-color: #F4E7D1;
-    box-shadow: 0 4px 14px rgba(74, 46, 18, 0.14), inset 0 0 10px rgba(184, 134, 11, 0.15);
+    background-color: var(--grimoire-statusbar-bg);
+    box-shadow: var(--grimoire-statusbar-shadow);
   }
 
-  .grimoire-status-btn { color: #D8CBE8; }
-  [data-theme="light"] .grimoire-status-btn { color: #4A2E12; }
+  .grimoire-status-btn {
+    color: var(--grimoire-status-btn-color);
+  }
 
   .grimoire-status-btn-active {
-    background-color: rgba(197, 155, 39, 0.25);
-    color: #FFF3D1;
-    box-shadow: 0 0 12px rgba(229, 184, 66, 0.3);
-  }
-  [data-theme="light"] .grimoire-status-btn-active {
-    background-color: rgba(184, 134, 11, 0.22);
-    color: #2C1A0B;
+    background-color: var(--grimoire-status-btn-active-bg);
+    color: var(--grimoire-status-btn-active-color);
+    box-shadow: var(--grimoire-status-btn-active-shadow);
   }
 
-  .grimoire-count { color: #E5B842; }
-  [data-theme="light"] .grimoire-count { color: #8C5811; }
+  .grimoire-count {
+    color: var(--text-gold);
+  }
 
   .grimoire-medallion {
-    background: linear-gradient(135deg, #231536 0%, #140B20 100%);
-  }
-  [data-theme="light"] .grimoire-medallion {
-    background: linear-gradient(135deg, #FFFDF8 0%, #EAD8B8 100%);
+    background: var(--grimoire-medallion-bg);
   }
 
   .grimoire-medallion-active {
-    background: linear-gradient(135deg, #3B2314 0%, #1F1209 100%);
-  }
-  [data-theme="light"] .grimoire-medallion-active {
-    background: linear-gradient(135deg, #FDE68A 0%, #D99B26 100%);
+    background: var(--grimoire-medallion-active-bg);
   }
 
   .grimoire-plaque {
-    background-color: rgba(23, 14, 38, 0.90);
-    color: #D8CBE8;
-  }
-  [data-theme="light"] .grimoire-plaque {
-    background-color: rgba(246, 235, 216, 0.95);
-    color: #3D2610;
+    background-color: var(--grimoire-plaque-bg);
+    color: var(--grimoire-plaque-color);
   }
 
   .grimoire-plaque-active {
-    background: linear-gradient(90deg, #3D2810 0%, #2B1B0C 60%, #1F1308 100%);
-    color: #FFF3D1;
-  }
-  [data-theme="light"] .grimoire-plaque-active {
-    background: linear-gradient(90deg, #6E4715 0%, #4A2E0B 100%);
-    color: #FFF8EB;
+    background: var(--grimoire-plaque-active-bg);
+    color: var(--grimoire-plaque-active-color);
   }
 
   .grimoire-card {
-    background:
-      radial-gradient(circle at 50% 42%, rgba(139, 92, 246, 0.16) 0%, transparent 65%),
-      linear-gradient(180deg, #211533 0%, #150D22 65%, #0F0919 100%);
-    box-shadow:
-      0 8px 24px rgba(0, 0, 0, 0.55),
-      inset 0 1px 0 rgba(253, 230, 138, 0.22);
-  }
-  [data-theme="light"] .grimoire-card {
-    background:
-      radial-gradient(circle at 50% 42%, rgba(212, 160, 23, 0.18) 0%, transparent 65%),
-      linear-gradient(180deg, #FFFDF9 0%, #F7EBD5 70%, #EDE0C8 100%);
-    box-shadow:
-      0 6px 18px rgba(74, 46, 18, 0.14),
-      inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    background: var(--grimoire-card-bg);
+    box-shadow: var(--grimoire-card-shadow);
   }
 
   .grimoire-card-title {
-    color: #FFF3D1;
-    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85));
-  }
-  [data-theme="light"] .grimoire-card-title {
-    color: #2C1A0B;
-    filter: none;
+    color: var(--grimoire-status-btn-active-color);
+    filter: var(--grimoire-card-title-shadow);
   }
 
-  .grimoire-card-sub { color: #B8A9CE; }
-  [data-theme="light"] .grimoire-card-sub { color: #6E5034; }
+  .grimoire-card-sub {
+    color: var(--text-secondary);
+  }
 
-  .grimoire-thumb { background-color: #120A1E; }
-  [data-theme="light"] .grimoire-thumb { background-color: #F4E7D1; }
+  .grimoire-thumb { background-color: var(--grimoire-thumb-bg); }
+  .grimoire-pill  { background-color: var(--grimoire-pill-bg); }
 
-  .grimoire-pill { background-color: rgba(18, 10, 30, 0.90); }
-  [data-theme="light"] .grimoire-pill { background-color: #F4E7D1; }
-
-  .grimoire-status-instock { color: #6EE7B7; }
-  [data-theme="light"] .grimoire-status-instock { color: #15803D; }
-
-  .grimoire-status-low { color: #FBBF24; }
-  [data-theme="light"] .grimoire-status-low { color: #B45309; }
-
-  .grimoire-status-out { color: #C084FC; }
-  [data-theme="light"] .grimoire-status-out { color: #7E22CE; }
+  .grimoire-status-instock { color: var(--grimoire-status-instock-color); }
+  .grimoire-status-low     { color: var(--grimoire-status-low-color); }
+  .grimoire-status-out     { color: var(--grimoire-status-out-color); }
 }
 
 /* ── Componentes — aplicados via variáveis CSS ───────────── */
@@ -293,47 +137,37 @@
     background-color: var(--bg-card) !important;
     color: var(--text-primary) !important;
     border-color: var(--border-default) !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 0 0 1px var(--border-default) !important;
+    box-shadow: var(--card-box-shadow) !important;
     transition: box-shadow 0.2s ease;
   }
-  [data-theme="dark"] .bg-white {
-    box-shadow: 0 4px 20px rgba(0,0,0,0.50), 0 0 0 1px var(--border-default) !important;
-  }
   .bg-white:hover {
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12), 0 0 0 1px var(--border-glow) !important;
-  }
-  [data-theme="dark"] .bg-white:hover {
-    box-shadow: 0 8px 32px rgba(0,0,0,0.60), 0 0 0 1px var(--border-glow) !important;
+    box-shadow: var(--card-box-shadow-hover) !important;
   }
 
   /* Primary surface */
   .bg-primary-600 {
     background-color: var(--navbar-bg) !important;
     border-bottom: 1px solid var(--navbar-border);
-    box-shadow: 0 2px 20px rgba(0,0,0,0.30) !important;
+    box-shadow: var(--grimoire-header-shadow) !important;
   }
 
   /* Texto no navbar */
-  header .text-white { color: #F5F3FF !important; }
+  header .text-white { color: var(--text-on-primary) !important; }
   [data-theme="dark"] header .text-white.font-bold,
   [data-theme="dark"] header .text-white.font-semibold {
     color: var(--text-gold) !important;
   }
 
   /* HouseSwitcher */
-  .bg-white\/10  { background-color: rgba(255,255,255,0.12) !important; }
-  .hover\:bg-white\/20:hover { background-color: rgba(255,255,255,0.22) !important; }
+  .bg-white\/10  { background-color: var(--white-alpha-12) !important; }
+  .hover\:bg-white\/20:hover { background-color: var(--white-alpha-22) !important; }
 
   /* Dropdowns */
   .shadow-xl.border.border-gray-100,
   .shadow-lg.border.border-gray-100 {
     background-color: var(--bg-raised) !important;
     border-color: var(--border-default) !important;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important;
-  }
-  [data-theme="dark"] .shadow-xl.border.border-gray-100,
-  [data-theme="dark"] .shadow-lg.border.border-gray-100 {
-    box-shadow: 0 8px 32px rgba(0,0,0,0.70) !important;
+    box-shadow: var(--dropdown-box-shadow) !important;
   }
 
   /* Textos */
@@ -372,9 +206,9 @@
   input.grimoire-qty-input,
   input.grimoire-qty-input:focus {
     background: transparent !important;
-    color: #2C1A0B !important;
+    color: var(--grimoire-status-btn-active-color) !important;
     border: none !important;
-    border-bottom: 1.5px solid #5C3A1E !important;
+    border-bottom: 1.5px solid var(--text-gold) !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     outline: none !important;
@@ -392,19 +226,19 @@
   button.bg-primary-600,
   .bg-primary-600.text-white {
     background-color: var(--accent-dark) !important;
-    color: #F5F3FF !important;
+    color: var(--text-on-primary) !important;
     border: 1px solid var(--accent-glow) !important;
-    box-shadow: 0 0 14px var(--accent-glow), 0 4px 10px rgba(0,0,0,0.25) !important;
+    box-shadow: var(--primary-btn-shadow) !important;
   }
   button.bg-primary-600:hover {
     background-color: var(--accent) !important;
-    box-shadow: 0 0 20px var(--accent-glow), 0 4px 14px rgba(0,0,0,0.30) !important;
+    box-shadow: var(--primary-btn-shadow-hover) !important;
   }
   button.bg-primary-600:active { transform: scale(0.98); }
 
   /* FAB */
   .shadow-primary-500\/30 {
-    box-shadow: 0 0 20px var(--accent-glow), 0 4px 14px rgba(0,0,0,0.30) !important;
+    box-shadow: var(--primary-btn-shadow-hover) !important;
   }
   .rounded-2xl.bg-primary-600 {
     background: linear-gradient(135deg, var(--accent-dark) 0%, var(--accent) 100%) !important;
@@ -433,21 +267,21 @@
   /* Filtro "Todos" ativo */
   .bg-gray-900 {
     background-color: var(--accent-dark) !important;
-    color: #F5F3FF !important;
+    color: var(--text-on-primary) !important;
     border: 1px solid var(--accent-glow) !important;
   }
   [data-theme="dark"] .bg-gray-900 {
-    background-color: #2D1F00 !important;
+    background-color: var(--status-low-bg) !important;
     color: var(--text-gold-light) !important;
-    border-color: rgba(212,160,23,0.40) !important;
-    box-shadow: 0 0 12px rgba(212,160,23,0.20) !important;
+    border-color: var(--status-low-border) !important;
+    box-shadow: var(--shadow-amber-glow) !important;
   }
 
   /* Filtro categoria ativo */
   .bg-primary-600.text-white.border-primary-600 {
     background-color: var(--accent) !important;
     border-color: var(--accent) !important;
-    color: #F5F3FF !important;
+    color: var(--text-on-primary) !important;
   }
 
   /* Títulos de secção */
@@ -489,8 +323,7 @@
   .bg-gray-300 { background-color: var(--border-default) !important; }
 
   /* Modal overlay */
-  .bg-black\/50 { background-color: rgba(0,0,0,0.60) !important; }
-  [data-theme="dark"] .bg-black\/50 { background-color: rgba(0,0,0,0.78) !important; }
+  .bg-black\/50 { background-color: var(--modal-overlay-bg) !important; }
 
   /* Activity log & hover backgrounds */
   .bg-primary-50,
@@ -520,20 +353,14 @@
   }
 
   /* Gradiente Auth */
-  .from-primary-600 { --tw-gradient-from: var(--navbar-bg) !important; }
-  .to-primary-800   { --tw-gradient-to:   #0A0414 !important; }
-  [data-theme="light"] .from-primary-600 { --tw-gradient-from: #5B21B6 !important; }
-  [data-theme="light"] .to-primary-800   { --tw-gradient-to:   #3B0764 !important; }
+  .from-primary-600 { --tw-gradient-from: var(--auth-grad-from) !important; }
+  .to-primary-800   { --tw-gradient-to:   var(--auth-grad-to)   !important; }
 
   /* Tabs segmentadas ativas (Nenhuma / Unidades / Peso/Vol, Enviar / Código, etc.) */
   .bg-white.shadow.text-primary-700 {
-    background-color: var(--accent-dark) !important;
-    color: #FFF3D1 !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28) !important;
-  }
-  [data-theme="light"] .bg-white.shadow.text-primary-700 {
-    background-color: var(--accent) !important;
-    color: #FFFFFF !important;
+    background-color: var(--tab-active-bg) !important;
+    color: var(--tab-active-text) !important;
+    box-shadow: var(--tab-active-shadow) !important;
   }
 
   /* Foco */

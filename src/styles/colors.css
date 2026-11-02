@@ -1,0 +1,329 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   PALETA CENTRAL DE CORES (RGB) — CALDEIRÃO DE GAIA
+   100% das cores e sombras do CSS e Tailwind ficam neste arquivo em formato RGB/RGBA.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Escala Primary (Ametista / Violeta) em canais R G B ───────────────── */
+  --rgb-primary-50:  245 243 255;
+  --rgb-primary-100: 237 233 254;
+  --rgb-primary-200: 221 214 254;
+  --rgb-primary-300: 196 181 253;
+  --rgb-primary-400: 167 139 250;
+  --rgb-primary-500: 139 92 246;
+  --rgb-primary-600: 124 58 237;
+  --rgb-primary-700: 109 40 217;
+  --rgb-primary-800: 91 33 182;
+  --rgb-primary-900: 76 29 149;
+
+  --rgb-white:       255 255 255;
+  --rgb-black:       0 0 0;
+
+  /* ── Pergaminho de Quantidade (Rolo & Botões de Bronze) ────────────────── */
+  --rgb-parchment-light:   234 210 172;
+  --rgb-parchment-mid:     213 180 133;
+  --rgb-parchment-dark:    182 143 92;
+  --rgb-parchment-ink:     44 26 11;
+  --rgb-parchment-border:  92 58 30;
+  --rgb-scroll-top:        140 98 57;
+  --rgb-scroll-mid:        222 192 148;
+  --rgb-scroll-bot:        110 73 38;
+  --rgb-bronze-top:        140 88 40;
+  --rgb-bronze-bot:        82 45 16;
+  --rgb-bronze-border:     59 30 8;
+
+  /* ── Sombras nomeadas para Tailwind & Componentes ──────────────────────── */
+  --shadow-grimoire:       0 4px 20px rgba(0, 0, 0, 0.50), 0 0 0 1px rgba(107, 63, 160, 0.20);
+  --shadow-grimoire-lg:    0 8px 32px rgba(0, 0, 0, 0.60), 0 0 0 1px rgba(107, 63, 160, 0.30);
+  --shadow-amethyst:       0 0 20px rgba(157, 78, 221, 0.35), 0 4px 14px rgba(0, 0, 0, 0.50);
+  --shadow-amber-glow:     0 0 12px rgba(212, 160, 23, 0.30);
+  --shadow-medallion-glow: 0 0 14px rgba(212, 160, 23, 0.45);
+  --shadow-plaque-glow:    0 0 15px rgba(212, 160, 23, 0.25);
+  --shadow-aura-instock:   0 0 24px rgba(74, 222, 128, 0.18);
+  --shadow-aura-low:       0 0 24px rgba(245, 158, 11, 0.22);
+  --shadow-aura-out:       0 0 24px rgba(168, 85, 247, 0.22);
+  --shadow-card-subtle:    0 4px 12px rgba(112, 0, 255, 0.06);
+  --drop-shadow-emblem:    drop-shadow(0 8px 16px rgba(0, 0, 0, 0.65));
+  --drop-shadow-item:      drop-shadow(0 6px 10px rgba(0, 0, 0, 0.45));
+  --drop-shadow-orb-text:  drop-shadow(0 2px 4px rgba(0, 0, 0, 0.85));
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEMA CLARO (Pergaminho Alquímico)
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root,
+[data-theme="light"] {
+  color-scheme: light;
+
+  --rgb-page:              247 245 252;
+  --rgb-card:              255 255 255;
+  --rgb-raised:            245 243 255;
+  --rgb-input:             255 255 255;
+
+  --rgb-navbar:            48 27 13;
+  --rgb-header-pill:       34 19 9;
+  --rgb-header-pill-hover: 56 32 15;
+  --rgb-header-alert:      68 38 6;
+
+  --rgb-border-default:    236 230 246;
+  --rgb-border-subtle:     240 234 248;
+
+  --rgb-text-primary:      26 16 40;
+  --rgb-text-secondary:    74 63 107;
+  --rgb-text-muted:        139 123 174;
+
+  --rgb-accent:            124 58 237;
+  --rgb-accent-dark:       109 40 217;
+
+  --rgb-gold:              197 155 39;
+  --rgb-gold-light:        229 184 66;
+  --rgb-gold-bright:       253 230 138;
+  --rgb-gold-dark:         140 88 17;
+  --rgb-gold-cream:        255 243 209;
+
+  --rgb-grimoire-text:     44 26 11;
+  --rgb-grimoire-sub:      110 80 52;
+  --rgb-grimoire-muted:    120 90 60;
+
+  --rgb-status-instock-bg:     240 253 244;
+  --rgb-status-instock-text:   22 101 52;
+  --rgb-status-instock-border: 187 247 208;
+
+  --rgb-status-low-bg:         255 251 235;
+  --rgb-status-low-text:       146 64 14;
+  --rgb-status-low-border:     253 230 138;
+
+  --rgb-status-out-bg:         254 242 242;
+  --rgb-status-out-text:       153 27 27;
+  --rgb-status-out-border:     254 202 202;
+
+  --rgb-scrollbar-track:   247 245 252;
+  --rgb-scrollbar-thumb:   221 214 254;
+
+  /* ── Superfícies & Gradientes do Grimório (Modo Claro) ─────────────────── */
+  --grimoire-header-bg:     rgba(48, 27, 13, 0.96);
+  --grimoire-header-shadow: 0 2px 16px rgba(44, 26, 11, 0.28);
+
+  --grimoire-shell-bg:      rgb(237, 224, 204);
+  --grimoire-shell-image:
+    radial-gradient(ellipse at 20% 10%, rgba(212, 160, 23, 0.18) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(124, 58, 237, 0.08) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgb(247, 239, 226) 0%, rgb(226, 208, 181) 100%);
+
+  --grimoire-frame-bg:
+    radial-gradient(ellipse at 50% 0%, rgba(212, 160, 23, 0.14) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(252, 246, 235, 0.96) 0%, rgba(242, 230, 209, 0.98) 100%);
+  --grimoire-frame-shadow:
+    0 16px 40px rgba(74, 46, 18, 0.18),
+    inset 0 0 0 1px rgba(184, 134, 11, 0.25),
+    inset 0 0 30px rgba(184, 134, 11, 0.08);
+
+  --grimoire-title-gradient: linear-gradient(180deg, rgb(140, 88, 17) 0%, rgb(184, 125, 20) 45%, rgb(74, 44, 6) 100%);
+  --grimoire-title-shadow:   drop-shadow(0 2px 3px rgba(255, 248, 231, 0.9));
+
+  --grimoire-section-heading-color: rgb(120, 75, 8);
+
+  --grimoire-statusbar-bg:     rgb(244, 231, 209);
+  --grimoire-statusbar-shadow: 0 4px 14px rgba(74, 46, 18, 0.14), inset 0 0 10px rgba(184, 134, 11, 0.15);
+
+  --grimoire-status-btn-color:        rgb(74, 46, 18);
+  --grimoire-status-btn-active-bg:    rgba(184, 134, 11, 0.22);
+  --grimoire-status-btn-active-color: rgb(44, 26, 11);
+  --grimoire-status-btn-active-shadow:none;
+
+  --grimoire-medallion-bg:        linear-gradient(135deg, rgb(255, 253, 248) 0%, rgb(234, 216, 184) 100%);
+  --grimoire-medallion-active-bg: linear-gradient(135deg, rgb(253, 230, 138) 0%, rgb(217, 155, 38) 100%);
+
+  --grimoire-plaque-bg:           rgba(246, 235, 216, 0.95);
+  --grimoire-plaque-color:        rgb(61, 38, 16);
+  --grimoire-plaque-active-bg:    linear-gradient(90deg, rgb(110, 71, 21) 0%, rgb(74, 46, 11) 100%);
+  --grimoire-plaque-active-color: rgb(255, 248, 235);
+
+  --grimoire-card-bg:
+    radial-gradient(circle at 50% 42%, rgba(212, 160, 23, 0.18) 0%, transparent 65%),
+    linear-gradient(180deg, rgb(255, 253, 249) 0%, rgb(247, 235, 213) 70%, rgb(237, 224, 200) 100%);
+  --grimoire-card-shadow:
+    0 6px 18px rgba(74, 46, 18, 0.14),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --grimoire-card-title-shadow: none;
+
+  --grimoire-thumb-bg: rgb(244, 231, 209);
+  --grimoire-pill-bg:  rgb(244, 231, 209);
+
+  --grimoire-status-instock-color: rgb(21, 128, 61);
+  --grimoire-status-low-color:     rgb(180, 83, 9);
+  --grimoire-status-out-color:     rgb(126, 34, 206);
+
+  --card-box-shadow:       0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px var(--border-default);
+  --card-box-shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12), 0 0 0 1px var(--border-glow);
+  --dropdown-box-shadow:   0 8px 32px rgba(0, 0, 0, 0.15);
+  --modal-overlay-bg:      rgba(0, 0, 0, 0.60);
+  --auth-grad-from:        rgb(91, 33, 182);
+  --auth-grad-to:          rgb(59, 7, 100);
+  --tab-active-bg:         var(--accent);
+  --tab-active-text:       rgb(255, 255, 255);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TEMA ESCURO (Grimório Digital)
+   ═══════════════════════════════════════════════════════════════════════════ */
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --rgb-page:              13 8 24;
+  --rgb-card:              22 14 36;
+  --rgb-raised:            30 21 48;
+  --rgb-input:             26 18 40;
+
+  --rgb-navbar:            18 8 32;
+  --rgb-header-pill:       29 18 46;
+  --rgb-header-pill-hover: 42 27 66;
+  --rgb-header-alert:      45 31 0;
+
+  --rgb-border-default:    46 31 66;
+  --rgb-border-subtle:     36 25 55;
+
+  --rgb-text-primary:      232 223 245;
+  --rgb-text-secondary:    168 155 194;
+  --rgb-text-muted:        107 95 130;
+
+  --rgb-accent:            157 78 221;
+  --rgb-accent-dark:       123 47 190;
+
+  --rgb-gold:              197 155 39;
+  --rgb-gold-light:        229 184 66;
+  --rgb-gold-bright:       253 230 138;
+  --rgb-gold-dark:         212 160 23;
+  --rgb-gold-cream:        255 243 209;
+
+  --rgb-grimoire-text:     245 230 200;
+  --rgb-grimoire-sub:      184 169 206;
+  --rgb-grimoire-muted:    168 155 194;
+
+  --rgb-status-instock-bg:     13 36 22;
+  --rgb-status-instock-text:   110 175 110;
+  --rgb-status-instock-border: 26 74 42;
+
+  --rgb-status-low-bg:         42 31 0;
+  --rgb-status-low-text:       212 160 23;
+  --rgb-status-low-border:     74 56 0;
+
+  --rgb-status-out-bg:         42 10 10;
+  --rgb-status-out-text:       224 92 92;
+  --rgb-status-out-border:     74 21 21;
+
+  --rgb-scrollbar-track:   13 8 24;
+  --rgb-scrollbar-thumb:   46 31 66;
+
+  /* ── Superfícies & Gradientes do Grimório (Modo Escuro) ────────────────── */
+  --grimoire-header-bg:     rgba(18, 8, 32, 0.94);
+  --grimoire-header-shadow: 0 2px 20px rgba(0, 0, 0, 0.55);
+
+  --grimoire-shell-bg:      rgb(14, 8, 22);
+  --grimoire-shell-image:
+    radial-gradient(ellipse at 20% 10%, rgba(124, 58, 237, 0.16) 0%, transparent 55%),
+    radial-gradient(ellipse at 80% 90%, rgba(212, 160, 23, 0.10) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, rgb(23, 14, 38) 0%, rgb(11, 6, 18) 100%);
+
+  --grimoire-frame-bg:
+    radial-gradient(ellipse at 50% 0%, rgba(197, 155, 39, 0.08) 0%, transparent 60%),
+    linear-gradient(180deg, rgba(28, 17, 44, 0.94) 0%, rgba(17, 10, 28, 0.97) 100%);
+  --grimoire-frame-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.75),
+    inset 0 0 0 1px rgba(253, 230, 138, 0.16),
+    inset 0 0 40px rgba(0, 0, 0, 0.65);
+
+  --grimoire-title-gradient: linear-gradient(180deg, rgb(255, 246, 214) 0%, rgb(243, 198, 95) 45%, rgb(184, 125, 20) 100%);
+  --grimoire-title-shadow:   drop-shadow(0 3px 6px rgba(0, 0, 0, 0.8));
+
+  --grimoire-section-heading-color: rgb(229, 184, 66);
+
+  --grimoire-statusbar-bg:     rgba(21, 13, 36, 0.95);
+  --grimoire-statusbar-shadow: 0 4px 20px rgba(0, 0, 0, 0.6), inset 0 0 12px rgba(197, 155, 39, 0.18);
+
+  --grimoire-status-btn-color:         rgb(216, 203, 232);
+  --grimoire-status-btn-active-bg:     rgba(197, 155, 39, 0.25);
+  --grimoire-status-btn-active-color:  rgb(255, 243, 209);
+  --grimoire-status-btn-active-shadow: 0 0 12px rgba(229, 184, 66, 0.3);
+
+  --grimoire-medallion-bg:        linear-gradient(135deg, rgb(35, 21, 54) 0%, rgb(20, 11, 32) 100%);
+  --grimoire-medallion-active-bg: linear-gradient(135deg, rgb(59, 35, 20) 0%, rgb(31, 18, 9) 100%);
+
+  --grimoire-plaque-bg:           rgba(23, 14, 38, 0.90);
+  --grimoire-plaque-color:        rgb(216, 203, 232);
+  --grimoire-plaque-active-bg:    linear-gradient(90deg, rgb(61, 40, 16) 0%, rgb(43, 27, 12) 60%, rgb(31, 19, 8) 100%);
+  --grimoire-plaque-active-color: rgb(255, 243, 209);
+
+  --grimoire-card-bg:
+    radial-gradient(circle at 50% 42%, rgba(139, 92, 246, 0.16) 0%, transparent 65%),
+    linear-gradient(180deg, rgb(33, 21, 51) 0%, rgb(21, 13, 34) 65%, rgb(15, 9, 25) 100%);
+  --grimoire-card-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(253, 230, 138, 0.22);
+  --grimoire-card-title-shadow: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.85));
+
+  --grimoire-thumb-bg: rgb(18, 10, 30);
+  --grimoire-pill-bg:  rgba(18, 10, 30, 0.90);
+
+  --grimoire-status-instock-color: rgb(110, 231, 183);
+  --grimoire-status-low-color:     rgb(251, 191, 36);
+  --grimoire-status-out-color:     rgb(192, 132, 252);
+
+  --card-box-shadow:       0 4px 20px rgba(0, 0, 0, 0.50), 0 0 0 1px var(--border-default);
+  --card-box-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.60), 0 0 0 1px var(--border-glow);
+  --dropdown-box-shadow:   0 8px 32px rgba(0, 0, 0, 0.70);
+  --modal-overlay-bg:      rgba(0, 0, 0, 0.78);
+  --auth-grad-from:        var(--navbar-bg);
+  --auth-grad-to:          rgb(10, 4, 20);
+  --tab-active-bg:         var(--accent-dark);
+  --tab-active-text:       rgb(255, 243, 209);
+}
+
+/* ── Variáveis CSS prontas em rgb() / rgba() (consumidas por index.css) ── */
+:root,
+[data-theme="light"],
+[data-theme="dark"] {
+  --bg-page:               rgb(var(--rgb-page));
+  --bg-card:               rgb(var(--rgb-card));
+  --bg-raised:             rgb(var(--rgb-raised));
+  --bg-input:              rgb(var(--rgb-input));
+
+  --border-default:        rgb(var(--rgb-border-default));
+  --border-subtle:         rgb(var(--rgb-border-subtle));
+  --border-glow:           rgb(var(--rgb-accent) / 0.35);
+
+  --text-primary:          rgb(var(--rgb-text-primary));
+  --text-secondary:        rgb(var(--rgb-text-secondary));
+  --text-muted:            rgb(var(--rgb-text-muted));
+  --text-gold:             rgb(var(--rgb-gold-dark));
+  --text-gold-light:       rgb(var(--rgb-gold-light));
+  --text-on-primary:       rgb(var(--rgb-primary-50));
+
+  --accent:                rgb(var(--rgb-accent));
+  --accent-dark:           rgb(var(--rgb-accent-dark));
+  --accent-glow:           rgb(var(--rgb-accent) / 0.35);
+
+  --navbar-bg:             rgb(var(--rgb-navbar));
+  --navbar-border:         rgb(var(--rgb-gold) / 0.25);
+
+  --status-instock-bg:     rgb(var(--rgb-status-instock-bg));
+  --status-instock-text:   rgb(var(--rgb-status-instock-text));
+  --status-instock-border: rgb(var(--rgb-status-instock-border));
+
+  --status-low-bg:         rgb(var(--rgb-status-low-bg));
+  --status-low-text:       rgb(var(--rgb-status-low-text));
+  --status-low-border:     rgb(var(--rgb-status-low-border));
+
+  --status-out-bg:         rgb(var(--rgb-status-out-bg));
+  --status-out-text:       rgb(var(--rgb-status-out-text));
+  --status-out-border:     rgb(var(--rgb-status-out-border));
+
+  --scrollbar-track:       rgb(var(--rgb-scrollbar-track));
+  --scrollbar-thumb:       rgb(var(--rgb-scrollbar-thumb));
+
+  --primary-btn-shadow:       0 0 14px var(--accent-glow), 0 4px 10px rgba(0, 0, 0, 0.25);
+  --primary-btn-shadow-hover: 0 0 20px var(--accent-glow), 0 4px 14px rgba(0, 0, 0, 0.30);
+  --tab-active-shadow:        0 2px 8px rgba(0, 0, 0, 0.28);
+  --white-alpha-12:           rgba(255, 255, 255, 0.12);
+  --white-alpha-22:           rgba(255, 255, 255, 0.22);
+}

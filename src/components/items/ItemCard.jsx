@@ -44,9 +44,9 @@ export function ItemCard({
   }
 
   const cardAuraClasses = {
-    in_stock:     'border-[#B88928]/80 hover:border-[#E5B842] hover:shadow-[0_0_24px_rgba(74,222,128,0.18)]',
-    running_low:  'border-[#D97706]/85 hover:border-[#FBBF24] hover:shadow-[0_0_24px_rgba(245,158,11,0.22)]',
-    out_of_stock: 'border-[#7E22CE]/75 hover:border-[#C084FC] hover:shadow-[0_0_24px_rgba(168,85,247,0.22)]',
+    in_stock:     'border-gold/80 hover:border-gold-light hover:shadow-aura-instock',
+    running_low:  'border-amber-600/85 hover:border-amber-400 hover:shadow-aura-low',
+    out_of_stock: 'border-purple-700/75 hover:border-purple-400 hover:shadow-aura-out',
   }
 
   function handleStatusClick(e) {
@@ -99,7 +99,7 @@ export function ItemCard({
         <div
           onClick={() => onEdit(item)}
           title="Clique para editar detalhes"
-          className="grimoire-thumb w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-[#B88928]/40 cursor-pointer"
+          className="grimoire-thumb w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-gold/40 cursor-pointer"
         >
           <img
             src={item.image_url || item.product?.image_url || placeholder}
@@ -149,7 +149,7 @@ export function ItemCard({
           <button
             onClick={handleStatusClick}
             title={`Mudar para: ${nextCfg.label}`}
-            className="grimoire-pill flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-[#B88928]/50 hover:border-[#E5B842] transition text-xs font-medium whitespace-nowrap"
+            className="grimoire-pill flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-gold/50 hover:border-gold-light transition text-xs font-medium whitespace-nowrap"
           >
             <StatusGem status={item.status} size={14} className="flex-shrink-0" />
             <span className={statusTextColors[item.status]}>{cfg.label}</span>
@@ -158,7 +158,7 @@ export function ItemCard({
           <div className="relative">
             <button
               onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
-              className="w-7 h-7 flex items-center justify-center rounded-lg text-[#C59B27] hover:bg-white/10 transition"
+              className="w-7 h-7 flex items-center justify-center rounded-lg text-gold hover:bg-white/10 transition"
               aria-label="Opções do item"
             >
               <MoreVertical size={15} />
@@ -186,7 +186,7 @@ export function ItemCard({
       style={{ minHeight: '268px' }}
     >
       {/* Moldura interna dourada fina */}
-      <div className="absolute inset-1.5 rounded-xl border border-[#C59B27]/30 pointer-events-none" />
+      <div className="absolute inset-1.5 rounded-xl border border-gold/30 pointer-events-none" />
 
       {/* Folhas ornamentais nos 4 cantos */}
       <CardCornerLeaves />
@@ -195,7 +195,7 @@ export function ItemCard({
       <div className="absolute top-2 right-2 z-20">
         <button
           onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
-          className="p-1 rounded-lg text-[#C59B27]/80 hover:text-[#E5B842] hover:bg-black/10 transition"
+          className="p-1 rounded-lg text-gold/80 hover:text-gold-light hover:bg-black/10 transition"
           aria-label="Opções do item"
         >
           <MoreVertical size={15} />
@@ -243,7 +243,7 @@ export function ItemCard({
         <img
           src={item.image_url || item.product?.image_url || placeholder}
           alt={productName}
-          className="max-h-full max-w-[85%] object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)] group-hover:scale-105 transition-transform duration-200"
+          className="max-h-full max-w-[85%] object-contain drop-shadow-item group-hover:scale-105 transition-transform duration-200"
           onError={e => { e.target.src = placeholder }}
         />
       </div>
@@ -302,16 +302,16 @@ function ParchmentScroll({
       onClick={e => e.stopPropagation()}
     >
       {/* Rolo esquerdo do pergaminho */}
-      <div className="w-2.5 h-8 rounded-full bg-gradient-to-b from-[#8C6239] via-[#DEC094] to-[#6E4926] border border-[#4A2E12] shadow-md flex-shrink-0 -mr-1 z-10" />
+      <div className="w-2.5 h-8 rounded-full bg-gradient-to-b from-parchment-scroll-top via-parchment-scroll-mid to-parchment-scroll-bot border border-parchment-border shadow-md flex-shrink-0 -mr-1 z-10" />
 
       {/* Corpo do pergaminho */}
-      <div className="flex-1 flex items-center justify-between gap-1 px-2 py-1 bg-gradient-to-b from-[#EAD2AC] via-[#D5B485] to-[#B68F5C] border-y border-[#5C3A1E] shadow-inner min-h-[28px]">
+      <div className="flex-1 flex items-center justify-between gap-1 px-2 py-1 bg-gradient-to-b from-parchment-light via-parchment-mid to-parchment-dark border-y border-parchment-border shadow-inner min-h-[28px]">
         <button
           type="button"
           onClick={e => handleAdjust(-1, e)}
           disabled={!hasQty || Number(qtyValue) <= 0}
           title="Diminuir"
-          className="w-5 h-5 flex items-center justify-center rounded bg-gradient-to-b from-[#8C5828] to-[#522D10] text-[#FDE68A] border border-[#3B1E08] font-bold text-xs leading-none hover:brightness-110 active:scale-95 disabled:opacity-35 transition"
+          className="w-5 h-5 flex items-center justify-center rounded bg-gradient-to-b from-parchment-bronze-top to-parchment-bronze-bot text-gold-bright border border-parchment-bronze-bdr font-bold text-xs leading-none hover:brightness-110 active:scale-95 disabled:opacity-35 transition"
         >
           −
         </button>
@@ -326,7 +326,7 @@ function ParchmentScroll({
             onBlur={handleQtyBlur}
             onKeyDown={handleQtyKeyDown}
             aria-label="Editar quantidade"
-            className="grimoire-qty-input flex-1 w-12 min-w-0 text-center text-xs font-bold text-[#2C1A0B] px-0.5 py-0"
+            className="grimoire-qty-input flex-1 w-12 min-w-0 text-center text-xs font-bold text-parchment-ink px-0.5 py-0"
             autoFocus
           />
         ) : (
@@ -334,7 +334,7 @@ function ParchmentScroll({
             type="button"
             onClick={handleQtyClick}
             title={hasQty ? 'Clique para editar o valor' : 'Clique para definir quantidade'}
-            className="flex-1 text-center text-xs font-bold text-[#2C1A0B] truncate px-1 hover:underline whitespace-nowrap"
+            className="flex-1 text-center text-xs font-bold text-parchment-ink truncate px-1 hover:underline whitespace-nowrap"
           >
             {qtyDisplay}
           </button>
@@ -344,14 +344,14 @@ function ParchmentScroll({
           type="button"
           onClick={e => handleAdjust(+1, e)}
           title="Aumentar"
-          className="w-5 h-5 flex items-center justify-center rounded bg-gradient-to-b from-[#8C5828] to-[#522D10] text-[#FDE68A] border border-[#3B1E08] font-bold text-xs leading-none hover:brightness-110 active:scale-95 transition"
+          className="w-5 h-5 flex items-center justify-center rounded bg-gradient-to-b from-parchment-bronze-top to-parchment-bronze-bot text-gold-bright border border-parchment-bronze-bdr font-bold text-xs leading-none hover:brightness-110 active:scale-95 transition"
         >
           +
         </button>
       </div>
 
       {/* Rolo direito do pergaminho */}
-      <div className="w-2.5 h-8 rounded-full bg-gradient-to-b from-[#8C6239] via-[#DEC094] to-[#6E4926] border border-[#4A2E12] shadow-md flex-shrink-0 -ml-1 z-10" />
+      <div className="w-2.5 h-8 rounded-full bg-gradient-to-b from-parchment-scroll-top via-parchment-scroll-mid to-parchment-scroll-bot border border-parchment-border shadow-md flex-shrink-0 -ml-1 z-10" />
     </div>
   )
 }

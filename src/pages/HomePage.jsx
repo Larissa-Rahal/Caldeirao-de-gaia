@@ -9,6 +9,7 @@ import { CauldronEmblem, StatusGem, CornerVine, AddOrbButton } from '@/component
 import { useItems } from '@/hooks/useItems'
 import { useCategories } from '@/hooks/useCategories'
 import { STATUS_CONFIG } from '@/lib/defaults'
+import { COLORS } from '@/lib/colors'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { CreateHouseModal } from '@/components/house/CreateHouseModal'
@@ -137,7 +138,7 @@ export function HomePage() {
 
       {/* Moldura Mística de Livro de Feitiços / Alquimia */}
       <div className="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-5 py-3 sm:py-5 pb-28">
-        <div className="grimoire-frame relative rounded-3xl border-2 border-[#C59B27]/65 p-4 sm:p-7 min-h-[calc(100dvh-5.5rem)]">
+        <div className="grimoire-frame relative rounded-3xl border-2 border-gold/65 p-4 sm:p-7 min-h-[calc(100dvh-5.5rem)]">
 
           {/* Ornamentos de Trepadeiras, Folhas, Lua e Estrelas nos 4 Cantos */}
           <CornerVine position="top-left"     className="w-24 h-24 sm:w-36 sm:h-36 absolute top-0 left-0 z-0 opacity-90" />
@@ -146,16 +147,16 @@ export function HomePage() {
           <CornerVine position="bottom-right" className="w-24 h-24 sm:w-36 sm:h-36 absolute bottom-0 right-0 z-0 opacity-80" />
 
           {/* ── CABEÇALHO DO GRIMÓRIO: Caldeirão + Título Dourado + Barra de Gemas ── */}
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-5 mb-5 border-b border-[#C59B27]/25">
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-5 mb-5 border-b border-gold/25">
 
             {/* Emblema do Caldeirão + Título */}
             <div className="flex items-center gap-3 sm:gap-4 pl-2 sm:pl-6">
-              <CauldronEmblem className="w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 -my-2 drop-shadow-[0_8px_16px_rgba(0,0,0,0.65)]" />
+              <CauldronEmblem className="w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 -my-2 drop-shadow-emblem" />
               <div>
                 <h1 className="grimoire-title font-serif font-extrabold text-2xl sm:text-4xl tracking-wide leading-tight select-none">
                   Caldeirão<br className="hidden sm:inline" /> de Gaia
                 </h1>
-                <p className="text-xs text-[#A89BC2] mt-0.5 hidden sm:block">
+                <p className="text-xs text-grimoire-muted mt-0.5 hidden sm:block">
                   Grimório &amp; Inventário Alquímico da Casa
                 </p>
               </div>
@@ -165,7 +166,7 @@ export function HomePage() {
             <div className="flex flex-col items-stretch lg:items-end gap-3 pr-1 sm:pr-4">
 
               {/* Cápsula Dourada de Status com Gemas Mágicas */}
-              <div className="grimoire-statusbar relative flex items-center flex-wrap sm:flex-nowrap gap-1.5 sm:gap-3 px-3.5 sm:px-5 py-2 rounded-full border-2 border-[#C59B27]/80">
+              <div className="grimoire-statusbar relative flex items-center flex-wrap sm:flex-nowrap gap-1.5 sm:gap-3 px-3.5 sm:px-5 py-2 rounded-full border-2 border-gold/80">
                 {STATUS_FILTERS.map(s => {
                   const cfg    = STATUS_CONFIG[s]
                   const active = statusFilter === s
@@ -178,7 +179,7 @@ export function HomePage() {
                       className={cn(
                         'grimoire-status-btn flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs sm:text-sm font-serif font-bold transition-all whitespace-nowrap',
                         active
-                          ? 'grimoire-status-btn-active ring-1 ring-[#E5B842]'
+                          ? 'grimoire-status-btn-active ring-1 ring-gold-light'
                           : 'hover:opacity-90'
                       )}
                     >
@@ -199,8 +200,8 @@ export function HomePage() {
                   className={cn(
                     'ml-auto sm:ml-1 p-1.5 rounded-full border transition',
                     search || searchOpen
-                      ? 'bg-[#C59B27] text-[#1A1028] border-[#FDE68A]'
-                      : 'bg-[#241638] text-[#E5B842] border-[#C59B27]/60 hover:border-[#FDE68A]'
+                      ? 'bg-gold text-header-pill border-gold-bright'
+                      : 'bg-header-pill text-gold-light border-gold/60 hover:border-gold-bright'
                   )}
                 >
                   <Search size={14} />
@@ -211,20 +212,20 @@ export function HomePage() {
               <div className="flex items-center justify-between lg:justify-end gap-3 w-full">
                 {(searchOpen || search) ? (
                   <div className="relative flex-1 max-w-xs">
-                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#E5B842] pointer-events-none" />
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gold-light pointer-events-none" />
                     <input
                       type="search"
                       placeholder="Buscar ingrediente, marca..."
                       value={search}
                       onChange={e => setSearch(e.target.value)}
                       autoFocus
-                      className="w-full pl-8 pr-7 py-1.5 rounded-full border border-[#C59B27]/70 bg-[#150D24] text-xs sm:text-sm text-[#FFF3D1] outline-none focus:ring-2 focus:ring-[#E5B842]"
+                      className="w-full pl-8 pr-7 py-1.5 rounded-full border border-gold/70 bg-input text-xs sm:text-sm text-grimoire-text outline-none focus:ring-2 focus:ring-gold-light"
                     />
                     {search && (
                       <button
                         type="button"
                         onClick={() => setSearch('')}
-                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#A89BC2] hover:text-white"
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-grimoire-muted hover:text-grimoire-text"
                       >
                         <X size={13} />
                       </button>
@@ -238,7 +239,7 @@ export function HomePage() {
                   type="button"
                   onClick={toggleView}
                   title={viewMode === 'grid' ? 'Mudar para lista compacta' : 'Mudar para cartas em grade'}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg border border-[#C59B27]/50 bg-[#1A1028]/80 hover:border-[#E5B842] text-[#E5B842] font-serif font-bold text-xs tracking-widest uppercase transition"
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg border border-gold/50 bg-header-pill/80 hover:border-gold-light text-gold-light font-serif font-bold text-xs tracking-widest uppercase transition"
                 >
                   {viewMode === 'grid' ? <LayoutGrid size={14} /> : <List size={14} />}
                   <span>{viewMode === 'grid' ? 'GRADE' : 'LISTA'}</span>
@@ -281,26 +282,26 @@ export function HomePage() {
             {/* Divisor Vertical Místico com Estrela e Lua (apenas Desktop) */}
             {categories.length > 0 && (
               <div className="hidden lg:flex flex-col items-center py-4 select-none pointer-events-none" aria-hidden="true">
-                <span className="text-[#E5B842] text-sm mb-2">✦</span>
-                <div className="w-px flex-1 bg-gradient-to-b from-[#C59B27]/80 via-[#C59B27]/40 to-[#C59B27]/80" />
-                <span className="text-[#E5B842] text-xs my-2">⚜</span>
-                <div className="w-px flex-1 bg-gradient-to-b from-[#C59B27]/80 via-[#C59B27]/40 to-[#C59B27]/80" />
-                <span className="text-[#E5B842] text-sm mt-2">☾</span>
+                <span className="text-gold-light text-sm mb-2">✦</span>
+                <div className="w-px flex-1 bg-gradient-to-b from-gold/80 via-gold/40 to-gold/80" />
+                <span className="text-gold-light text-xs my-2">⚜</span>
+                <div className="w-px flex-1 bg-gradient-to-b from-gold/80 via-gold/40 to-gold/80" />
+                <span className="text-gold-light text-sm mt-2">☾</span>
               </div>
             )}
 
             {/* Área Principal das Cartas de Ingredientes */}
             <div className="flex-1 min-w-0">
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-24 gap-3 text-[#C59B27]">
+                <div className="flex flex-col items-center justify-center py-24 gap-3 text-gold">
                   <RefreshCw size={26} className="animate-spin" />
-                  <p className="font-serif text-sm text-[#E5B842]">Consultando o grimório...</p>
+                  <p className="font-serif text-sm text-gold-light">Consultando o grimório...</p>
                 </div>
 
               ) : filtered.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
                   <CauldronEmblem className="w-24 h-24 opacity-75" />
-                  <p className="font-serif text-base text-[#F5E6C8]">
+                  <p className="font-serif text-base text-grimoire-text">
                     {items.length === 0
                       ? 'O caldeirão está vazio. Adicione o primeiro ingrediente mágico!'
                       : 'Nenhum ingrediente corresponde aos encantamentos de busca.'}
@@ -332,10 +333,10 @@ export function HomePage() {
                     <section key={key} aria-labelledby={`cat-${key}`}>
                       <h2
                         id={`cat-${key}`}
-                        className="font-serif text-xs sm:text-sm font-bold text-[#E5B842] uppercase tracking-wider mb-3 px-1 flex items-center gap-2"
+                        className="font-serif text-xs sm:text-sm font-bold text-gold-light uppercase tracking-wider mb-3 px-1 flex items-center gap-2"
                       >
                         <span>{group.label}</span>
-                        <span className="text-[#A89BC2] font-sans font-normal text-xs">
+                        <span className="text-grimoire-muted font-sans font-normal text-xs">
                           ({group.items.length})
                         </span>
                       </h2>
@@ -456,9 +457,9 @@ function CategoryMedallion({ emoji, name, active, onClick }) {
         fill="none"
         aria-hidden="true"
       >
-        <path d="M18 6 C8 14, 8 30, 18 38" stroke="#C59B27" strokeWidth="1.5" />
-        <path d="M14 14 C6 10, 4 18, 12 20 Z" fill="#2D6A4F" stroke="#C59B27" strokeWidth="0.9" />
-        <path d="M12 24 C4 22, 4 30, 12 30 Z" fill="#40916C" stroke="#C59B27" strokeWidth="0.9" />
+        <path d="M18 6 C8 14, 8 30, 18 38" stroke={COLORS.gold.base} strokeWidth="1.5" />
+        <path d="M14 14 C6 10, 4 18, 12 20 Z" fill={COLORS.foliage.mid} stroke={COLORS.gold.base} strokeWidth="0.9" />
+        <path d="M12 24 C4 22, 4 30, 12 30 Z" fill={COLORS.foliage.light} stroke={COLORS.gold.base} strokeWidth="0.9" />
       </svg>
 
       {/* Medalhão circular dourado */}
@@ -466,8 +467,8 @@ function CategoryMedallion({ emoji, name, active, onClick }) {
         className={cn(
           'relative z-10 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border-2 transition-all shadow-md flex-shrink-0',
           active
-            ? 'grimoire-medallion-active border-[#FDE68A] ring-2 ring-[#D4A017]/50 shadow-[0_0_14px_rgba(212,160,23,0.45)]'
-            : 'grimoire-medallion border-[#C59B27]/80 group-hover:border-[#E5B842]'
+            ? 'grimoire-medallion-active border-gold-bright ring-2 ring-gold-dark/50 shadow-medallion-glow'
+            : 'grimoire-medallion border-gold/80 group-hover:border-gold-light'
         )}
       >
         <span className="text-base sm:text-lg leading-none select-none">{emoji}</span>
@@ -478,8 +479,8 @@ function CategoryMedallion({ emoji, name, active, onClick }) {
         className={cn(
           'flex-1 -ml-3 pl-5 pr-3.5 py-1.5 sm:py-2 rounded-r-full border-y border-r transition-all min-w-0',
           active
-            ? 'grimoire-plaque-active border-[#E5B842] shadow-[0_0_15px_rgba(212,160,23,0.25)]'
-            : 'grimoire-plaque border-[#C59B27]/55 group-hover:border-[#E5B842]'
+            ? 'grimoire-plaque-active border-gold-light shadow-plaque-glow'
+            : 'grimoire-plaque border-gold/55 group-hover:border-gold-light'
         )}
       >
         <span className="block font-serif font-semibold text-xs sm:text-sm truncate">
