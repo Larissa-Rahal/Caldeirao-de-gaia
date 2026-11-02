@@ -45,11 +45,9 @@ export function useItems() {
         'postgres_changes',
         { event: '*', schema: 'public', table: 'items', filter: `house_id=eq.${activeHouse.id}` },
         (payload) => {
-          if (payload.eventType === 'DELETE') {
-            setItems(prev => prev.filter(i => i.id !== payload.old.id))
-          } else {
-            fetchItems()
-          }
+          // Para todos os eventos faz refetch — mais simples e fiável
+          // O deleteItem já atualiza o estado local imediatamente
+          fetchItems()
         }
       )
       .subscribe()
@@ -65,7 +63,7 @@ export function useItems() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeHouse?.id])
 
-  async function addItem({ name, categoryId, notes, imageUrl }) {
+  async function addItem({ name, categoryId, notes, imageUrl, quantity }) {
     const { data, error: err } = await supabase
       .from('items')
       .insert({
@@ -74,6 +72,7 @@ export function useItems() {
         name:        name.trim(),
         notes:       notes?.trim() ?? null,
         image_url:   imageUrl ?? null,
+        quantity:    quantity ?? null,
         status:      'in_stock',
         created_by:  user.id,
         updated_by:  user.id,
@@ -115,6 +114,8 @@ export function useItems() {
   async function deleteItem(itemId) {
     const { error: err } = await supabase.from('items').delete().eq('id', itemId)
     if (err) throw err
+    // Atualiza o estado local imediatamente — não depende do Realtime para DELETE
+    setItems(prev => prev.filter(i => i.id !== itemId))
   }
 
   const itemsByCategory = items.reduce((acc, item) => {

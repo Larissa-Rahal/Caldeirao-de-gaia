@@ -78,6 +78,7 @@ export function HomePage() {
     await updateItem(editItem.id, {
       name:        data.name,
       category_id: data.categoryId,
+      quantity:    data.quantity,
       notes:       data.notes,
       image_url:   data.imageUrl,
     })
@@ -114,64 +115,68 @@ export function HomePage() {
         </div>
 
         {/* ── Filtros de status ── */}
-        <div className="flex gap-2 overflow-x-auto pb-1 mb-3 scrollbar-hide">
-          {STATUS_FILTERS.map(s => {
-            const cfg    = STATUS_CONFIG[s]
-            const active = statusFilter === s
-            return (
-              <button
-                key={s}
-                onClick={() => setStatusFilter(s)}
-                aria-pressed={active}
-                className={cn(
-                  'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
-                  active
-                    ? s === 'all'
-                      ? 'bg-gray-900 text-white'
-                      : cn(cfg?.bg, cfg?.text, 'border', cfg?.border)
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                )}
-              >
-                {s === 'all' ? 'Todos' : cfg?.label}
-                <span className={cn(
-                  'min-w-[18px] text-center px-1 py-0.5 rounded-full text-xs font-semibold',
-                  active && s !== 'all' ? cfg?.text : 'text-gray-400'
-                )}>
-                  {counts[s]}
-                </span>
-              </button>
-            )
-          })}
+        <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto scrollbar-hide mb-3">
+          <div className="flex gap-2 pb-1 w-max min-w-full">
+            {STATUS_FILTERS.map(s => {
+              const cfg    = STATUS_CONFIG[s]
+              const active = statusFilter === s
+              return (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  aria-pressed={active}
+                  className={cn(
+                    'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
+                    active
+                      ? s === 'all'
+                        ? 'bg-gray-900 text-white'
+                        : cn(cfg?.bg, cfg?.text, 'border', cfg?.border)
+                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                  )}
+                >
+                  {s === 'all' ? 'Todos' : cfg?.label}
+                  <span className={cn(
+                    'min-w-[18px] text-center px-1 py-0.5 rounded-full text-xs font-semibold',
+                    active && s !== 'all' ? cfg?.text : 'text-gray-400'
+                  )}>
+                    {counts[s]}
+                  </span>
+                </button>
+              )
+            })}
+          </div>
         </div>
 
         {/* ── Filtros de categoria ── */}
         {categories.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-1 mb-5 scrollbar-hide">
-            <button
-              onClick={() => setCategoryFilter('all')}
-              className={cn(
-                'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
-                categoryFilter === 'all'
-                  ? 'bg-primary-600 text-white border-primary-600'
-                  : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-              )}
-            >
-              Todas
-            </button>
-            {categories.map(cat => (
+          <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto scrollbar-hide mb-5">
+            <div className="flex gap-2 pb-1 w-max min-w-full">
               <button
-                key={cat.id}
-                onClick={() => setCategoryFilter(cat.id)}
+                onClick={() => setCategoryFilter('all')}
                 className={cn(
-                  'flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
-                  categoryFilter === cat.id
+                  'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
+                  categoryFilter === 'all'
                     ? 'bg-primary-600 text-white border-primary-600'
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                 )}
               >
-                {cat.emoji} {cat.name}
+                Todas
               </button>
-            ))}
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setCategoryFilter(cat.id)}
+                  className={cn(
+                    'flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
+                    categoryFilter === cat.id
+                      ? 'bg-primary-600 text-white border-primary-600'
+                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                  )}
+                >
+                  {cat.emoji} {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

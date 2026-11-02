@@ -55,6 +55,11 @@ export function ItemCard({ item, onCycleStatus, onEdit, onDelete }) {
               item.status === 'out_of_stock' && 'line-through text-gray-400'
             )}>
               {item.name}
+              {item.quantity && (
+                <span className="ml-1.5 text-xs font-normal text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-md">
+                  {item.quantity}
+                </span>
+              )}
             </p>
             {item.notes && (
               <p className="text-xs text-gray-400 truncate mt-0.5">{item.notes}</p>

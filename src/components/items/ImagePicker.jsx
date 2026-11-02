@@ -10,7 +10,6 @@ export function ImagePicker({ itemName, value, onChange }) {
   const [searched, setSearched] = useState(false)
   const debounceRef = useRef(null)
 
-  // Pré-preenche com o nome do item (só na primeira vez)
   useEffect(() => {
     if (itemName && !searched) {
       setQuery(itemName)
@@ -48,22 +47,6 @@ export function ImagePicker({ itemName, value, onChange }) {
 
   return (
     <div className="flex flex-col gap-3">
-
-      {/* Cabeçalho */}
-      <div className="flex items-center justify-between">
-        <label className="text-sm font-medium text-gray-700">
-          Imagem do produto
-        </label>
-        {value && (
-          <button
-            type="button"
-            onClick={() => onChange(null)}
-            className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition"
-          >
-            <X size={12} /> Remover
-          </button>
-        )}
-      </div>
 
       {/* Preview da selecionada */}
       {value && (

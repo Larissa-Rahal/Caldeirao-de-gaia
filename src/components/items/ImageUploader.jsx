@@ -1,31 +1,25 @@
 import { useRef, useState } from 'react'
-import { Upload, Loader2, X, Camera } from 'lucide-react'
+import { Upload, Loader2, X, Camera, Images } from 'lucide-react'
 import { uploadProductImage } from '@/lib/storage'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
 
-/**
- * Upload de imagem própria para o Supabase Storage.
- * Aceita clique e drag-and-drop.
- * Em mobile abre a câmara ou galeria automaticamente.
- */
 export function ImageUploader({ value, onChange }) {
-  const { user } = useAuth()
-  const inputRef  = useRef(null)
-  const [loading, setLoading]  = useState(false)
-  const [error,   setError]    = useState('')
-  const [preview, setPreview]  = useState(null)
+  const { user }   = useAuth()
+  const cameraRef  = useRef(null)  // abre câmara
+  const galleryRef = useRef(null)  // abre galeria
+
+  const [loading,  setLoading]  = useState(false)
+  const [error,    setError]    = useState('')
+  const [preview,  setPreview]  = useState(null)
   const [dragOver, setDragOver] = useState(false)
 
   async function handleFile(file) {
     if (!file) return
     setError('')
-
-    // Preview local imediato
     const objectUrl = URL.createObjectURL(file)
     setPreview(objectUrl)
     setLoading(true)
-
     try {
       const publicUrl = await uploadProductImage(file, user.id)
       onChange(publicUrl)
@@ -41,7 +35,7 @@ export function ImageUploader({ value, onChange }) {
 
   function handleInputChange(e) {
     handleFile(e.target.files?.[0])
-    e.target.value = ''  // reset para permitir selecionar o mesmo ficheiro de novo
+    e.target.value = ''
   }
 
   function handleDrop(e) {
@@ -61,19 +55,29 @@ export function ImageUploader({ value, onChange }) {
   return (
     <div className="flex flex-col gap-2">
 
-      {/* Input oculto — aceita imagem, abre câmara em mobile */}
+      {/* Input câmara — capture="environment" força câmara traseira em mobile */}
       <input
-        ref={inputRef}
+        ref={cameraRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp,image/gif"
+        accept="image/jpeg,image/png,image/webp"
         capture="environment"
         onChange={handleInputChange}
         className="hidden"
-        aria-label="Carregar imagem"
+        aria-label="Tirar foto"
+      />
+
+      {/* Input galeria — sem capture, abre o seletor de ficheiros/galeria */}
+      <input
+        ref={galleryRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/gif"
+        onChange={handleInputChange}
+        className="hidden"
+        aria-label="Escolher da galeria"
       />
 
       {displayImage ? (
-        /* Preview da imagem carregada */
+        /* Preview */
         <div className="relative rounded-2xl overflow-hidden border border-gray-200 bg-gray-50">
           <img
             src={displayImage}
@@ -98,42 +102,53 @@ export function ImageUploader({ value, onChange }) {
           )}
         </div>
       ) : (
-        /* Zona de drop / botão de upload */
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-          onDragLeave={() => setDragOver(false)}
-          onDrop={handleDrop}
-          disabled={loading}
-          className={cn(
-            'w-full flex flex-col items-center justify-center gap-2 py-6 rounded-2xl border-2 border-dashed transition-colors',
-            dragOver
-              ? 'border-primary-400 bg-primary-50'
-              : 'border-gray-200 bg-gray-50 hover:border-primary-300 hover:bg-primary-50/50',
-            loading && 'opacity-50 pointer-events-none'
-          )}
-        >
-          {loading ? (
-            <Loader2 size={22} className="animate-spin text-primary-500" />
-          ) : (
-            <>
-              <div className="flex gap-3 text-gray-400">
-                <Upload size={20} />
-                <Camera size={20} />
-              </div>
-              <div className="text-center">
-                <p className="text-sm font-medium text-gray-600">Carregar imagem</p>
-                <p className="text-xs text-gray-400 mt-0.5">
-                  Clica ou arrasta · JPG, PNG, WebP · máx. 5MB
-                </p>
-                <p className="text-xs text-primary-500 mt-0.5 sm:hidden">
-                  📷 No telemóvel abre a câmara
-                </p>
-              </div>
-            </>
-          )}
-        </button>
+        <>
+          {/* Zona drag-and-drop (desktop) */}
+          <div
+            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+            onDragLeave={() => setDragOver(false)}
+            onDrop={handleDrop}
+            className={cn(
+              'w-full flex items-center justify-center py-4 rounded-2xl border-2 border-dashed transition-colors',
+              dragOver ? 'border-primary-400 bg-primary-50' : 'border-gray-200 bg-gray-50',
+              loading && 'opacity-50'
+            )}
+          >
+            {loading ? (
+              <Loader2 size={20} className="animate-spin text-primary-500" />
+            ) : (
+              <p className="text-xs text-gray-400">
+                Arrasta uma imagem aqui · ou usa os botões abaixo
+              </p>
+            )}
+          </div>
+
+          {/* Botões câmara + galeria */}
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => cameraRef.current?.click()}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition disabled:opacity-40"
+            >
+              <Camera size={18} />
+              Câmara
+            </button>
+            <button
+              type="button"
+              onClick={() => galleryRef.current?.click()}
+              disabled={loading}
+              className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition disabled:opacity-40"
+            >
+              <Images size={18} />
+              Galeria
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-400 text-center">
+            JPG, PNG, WebP · máx. 5MB
+          </p>
+        </>
       )}
 
       {error && (
