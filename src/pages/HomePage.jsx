@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { Plus, Search, RefreshCw, LayoutGrid, List, ShoppingCart } from 'lucide-react'
+import { Plus, Search, RefreshCw, LayoutGrid, List, ShoppingCart, Filter, ChevronDown, Check, X } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { ItemCard } from '@/components/items/ItemCard'
 import { ItemFormModal } from '@/components/items/ItemFormModal'
@@ -24,6 +24,7 @@ export function HomePage() {
   const [search,          setSearch]          = useState('')
   const [statusFilter,    setStatusFilter]    = useState('all')
   const [categoryFilter,  setCategoryFilter]  = useState('all')
+  const [catMenuOpen,     setCatMenuOpen]     = useState(false)
   const [viewMode,        setViewMode]        = useState(() => localStorage.getItem(VIEW_KEY) ?? 'grid')
   const [addOpen,         setAddOpen]         = useState(false)
   const [editItem,        setEditItem]        = useState(null)
@@ -77,6 +78,11 @@ export function HomePage() {
     running_low:  items.filter(i => i.status === 'running_low').length,
     out_of_stock: items.filter(i => i.status === 'out_of_stock').length,
   }), [items])
+
+  const selectedCategory = useMemo(
+    () => categories.find(c => c.id === categoryFilter) ?? null,
+    [categories, categoryFilter]
+  )
 
   const needsMarket = counts.running_low + counts.out_of_stock
 
@@ -169,8 +175,8 @@ export function HomePage() {
           </button>
         </div>
 
-        <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto scrollbar-hide mb-3">
-          <div className="flex gap-2 pb-1 w-max min-w-full">
+        <div className="flex items-center justify-between gap-2 mb-5">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-0.5 min-w-0">
             {STATUS_FILTERS.map(s => {
               const cfg    = STATUS_CONFIG[s]
               const active = statusFilter === s
@@ -199,39 +205,102 @@ export function HomePage() {
               )
             })}
           </div>
-        </div>
 
-        {categories.length > 0 && (
-          <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto scrollbar-hide mb-5">
-            <div className="flex gap-2 pb-1 w-max min-w-full">
-              <button
-                onClick={() => setCategoryFilter('all')}
-                className={cn(
-                  'flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
-                  categoryFilter === 'all'
-                    ? 'bg-primary-600 text-white border-primary-600'
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                )}
-              >
-                Todas
-              </button>
-              {categories.map(cat => (
+          {categories.length > 0 && (
+            <div className="relative flex-shrink-0">
+              <div className="flex items-center">
                 <button
-                  key={cat.id}
-                  onClick={() => setCategoryFilter(cat.id)}
+                  type="button"
+                  onClick={() => setCatMenuOpen(v => !v)}
+                  aria-expanded={catMenuOpen}
                   className={cn(
-                    'flex-shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
-                    categoryFilter === cat.id
-                      ? 'bg-primary-600 text-white border-primary-600'
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
+                    selectedCategory
+                      ? 'bg-primary-600 text-white border-primary-600 pr-2'
                       : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                   )}
                 >
-                  {cat.emoji} {cat.name}
+                  <Filter size={13} />
+                  <span className="max-w-[120px] truncate">
+                    {selectedCategory
+                      ? `${selectedCategory.emoji} ${selectedCategory.name}`
+                      : 'Categorias'}
+                  </span>
+                  {selectedCategory ? (
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={e => {
+                        e.stopPropagation()
+                        setCategoryFilter('all')
+                        setCatMenuOpen(false)
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.stopPropagation()
+                          setCategoryFilter('all')
+                          setCatMenuOpen(false)
+                        }
+                      }}
+                      className="ml-0.5 p-0.5 rounded-full hover:bg-white/20 transition"
+                      title="Limpar filtro de categoria"
+                    >
+                      <X size={12} />
+                    </span>
+                  ) : (
+                    <ChevronDown size={13} className={cn('transition-transform', catMenuOpen && 'rotate-180')} />
+                  )}
                 </button>
-              ))}
+              </div>
+
+              {catMenuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setCatMenuOpen(false)}
+                    aria-hidden="true"
+                  />
+                  <div className="absolute right-0 top-full mt-2 z-40 w-56 rounded-2xl shadow-xl border border-gray-100 py-1.5 max-h-72 overflow-y-auto">
+                    <button
+                      type="button"
+                      onClick={() => { setCategoryFilter('all'); setCatMenuOpen(false) }}
+                      className={cn(
+                        'w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium transition hover:bg-gray-50',
+                        categoryFilter === 'all' ? 'text-primary-700 font-semibold' : 'text-gray-700'
+                      )}
+                    >
+                      <span>Todas as categorias</span>
+                      {categoryFilter === 'all' && <Check size={14} className="text-primary-700" />}
+                    </button>
+
+                    <div className="border-t border-gray-100 my-1" />
+
+                    {categories.map(cat => {
+                      const active = categoryFilter === cat.id
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => { setCategoryFilter(cat.id); setCatMenuOpen(false) }}
+                          className={cn(
+                            'w-full flex items-center justify-between gap-2 px-3.5 py-2 text-xs font-medium transition hover:bg-gray-50',
+                            active ? 'text-primary-700 font-semibold' : 'text-gray-700'
+                          )}
+                        >
+                          <span className="flex items-center gap-2 truncate">
+                            <span>{cat.emoji}</span>
+                            <span className="truncate">{cat.name}</span>
+                          </span>
+                          {active && <Check size={14} className="text-primary-700 flex-shrink-0" />}
+                        </button>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">

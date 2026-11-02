@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Settings, LogOut, Sun, Moon, UserCog } from 'lucide-react'
+import { LogOut, Sun, Moon, UserCog } from 'lucide-react'
 import { HouseSwitcher } from './HouseSwitcher'
 import { Avatar } from '@/components/ui/Avatar'
 import { PushNotificationToggle } from '@/components/ui/PushNotificationToggle'
@@ -36,7 +36,11 @@ export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
           </span>
 
           <div className="flex-1 min-w-0">
-            <HouseSwitcher onCreateHouse={onCreateHouse} onJoinHouse={onJoinHouse} />
+            <HouseSwitcher
+              onCreateHouse={onCreateHouse}
+              onJoinHouse={onJoinHouse}
+              onOpenSettings={onOpenSettings}
+            />
           </div>
 
           <button
@@ -95,13 +99,6 @@ export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
                     className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
                   >
                     <UserCog size={15} /> Editar perfil
-                  </button>
-
-                  <button
-                    onClick={() => { setMenuOpen(false); onOpenSettings() }}
-                    className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
-                  >
-                    <Settings size={15} /> Configurações da casa
                   </button>
 
                   <div className="border-t border-gray-100 my-0.5" />

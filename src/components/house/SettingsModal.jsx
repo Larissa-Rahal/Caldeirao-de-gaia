@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Copy, RefreshCw, Link, Trash2, UserMinus, Crown, Share2 } from 'lucide-react'
+import { RefreshCw, Trash2, UserMinus, Crown, Share2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -25,16 +25,6 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
 
   const isOwner   = activeHouse.myRole === 'owner'
   const inviteUrl = buildInviteUrl(activeHouse.invite_code)
-
-  async function handleCopyCode() {
-    await copyToClipboard(activeHouse.invite_code)
-    toast.success('Código copiado!')
-  }
-
-  async function handleCopyLink() {
-    await copyToClipboard(inviteUrl)
-    toast.success('Link copiado!')
-  }
 
   async function handleShare() {
     const shareData = {
@@ -142,19 +132,14 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
             <p className="text-xs text-primary-500 font-medium mb-2 uppercase tracking-wider">
               Código de convite
             </p>
-            <p className="text-4xl font-mono font-bold tracking-widest text-primary-700 mb-3">
+            <p className="text-4xl font-mono font-bold tracking-widest text-primary-700">
               {activeHouse.invite_code}
             </p>
-            <p className="text-xs text-gray-400 break-all">{inviteUrl}</p>
           </div>
 
           <Button onClick={handleShare} size="lg" className="w-full gap-2">
             <Share2 size={18} />
             Compartilhar convite
-          </Button>
-
-          <Button variant="secondary" onClick={handleCopyCode} className="w-full gap-2">
-            <Copy size={14} /> Copiar código
           </Button>
 
           {isOwner && (
