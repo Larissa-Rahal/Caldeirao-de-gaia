@@ -6,8 +6,8 @@ import { timeAgo, cn } from '@/lib/utils'
 export function ItemCard({ item, onCycleStatus, onEdit, onDelete }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
-  const cfg      = STATUS_CONFIG[item.status]
-  const nextCfg  = STATUS_CONFIG[STATUS_CYCLE[item.status]]
+  const cfg     = STATUS_CONFIG[item.status]
+  const nextCfg = STATUS_CONFIG[STATUS_CYCLE[item.status]]
   const updaterName = item.profiles?.full_name ?? 'Alguém'
 
   function handleStatusClick(e) {
@@ -22,37 +22,33 @@ export function ItemCard({ item, onCycleStatus, onEdit, onDelete }) {
   }
 
   return (
+    // overflow-visible no container para o menu não ficar cortado
     <div className={cn(
-      'relative flex flex-col rounded-2xl border bg-white overflow-hidden',
+      'relative flex flex-col rounded-2xl border bg-white',
       'transition-all duration-150 hover:shadow-md',
       cfg.border
     )}>
 
-      {/* Imagem em destaque — visível quando existe */}
+      {/* Imagem — container separado com overflow-hidden só aqui */}
       {item.image_url && (
-        <div className="w-full bg-gray-50 border-b border-gray-100 flex items-center justify-center"
+        <div className="w-full rounded-t-2xl overflow-hidden bg-gray-50 border-b border-gray-100"
              style={{ height: '140px' }}>
           <img
             src={item.image_url}
             alt={item.name}
-            className="h-full w-full object-contain p-3"
+            className="w-full h-full object-contain p-3"
             onError={e => { e.target.closest('div').style.display = 'none' }}
           />
         </div>
       )}
 
-      {/* Corpo do cartão */}
+      {/* Corpo */}
       <div className="flex flex-col gap-2.5 p-3.5">
 
-        {/* Linha: cor + nome + menu */}
+        {/* Nome + menu */}
         <div className="flex items-start gap-2">
-          {/* Ponto de cor (sempre presente) */}
-          <span
-            className={cn('mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0', cfg.dot)}
-            aria-hidden="true"
-          />
+          <span className={cn('mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0', cfg.dot)} aria-hidden="true" />
 
-          {/* Nome e nota */}
           <div className="flex-1 min-w-0">
             <p className={cn(
               'text-sm font-semibold text-gray-900 leading-snug',
@@ -65,38 +61,42 @@ export function ItemCard({ item, onCycleStatus, onEdit, onDelete }) {
             )}
           </div>
 
-          {/* Menu ⋯ */}
+          {/* Menu ⋯ — z-index alto para sobrepor outros cards */}
           <div className="relative flex-shrink-0">
             <button
               onClick={(e) => { e.stopPropagation(); setMenuOpen(v => !v) }}
               className="p-1.5 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition"
               aria-label="Mais opções"
-              aria-haspopup="true"
-              aria-expanded={menuOpen}
             >
               <MoreVertical size={16} />
             </button>
 
             {menuOpen && (
               <>
-                <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} aria-hidden="true" />
-                <div className="absolute right-0 top-8 z-20 w-44 bg-white border border-gray-100 rounded-xl shadow-lg py-1 overflow-hidden">
+                {/* Overlay para fechar */}
+                <div
+                  className="fixed inset-0 z-40"
+                  onClick={() => setMenuOpen(false)}
+                  aria-hidden="true"
+                />
+                {/* Dropdown — z-50 e posição fixa em relação ao viewport */}
+                <div className="absolute right-0 top-full mt-1 z-50 w-44 bg-white border border-gray-100 rounded-xl shadow-xl py-1 overflow-hidden">
                   <button
                     onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onEdit(item) }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
                   >
                     <Pencil size={14} /> Editar
                   </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); setMenuOpen(false); handleGoogleShopping(e) }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
                   >
                     <ExternalLink size={14} /> Ver preços
                   </button>
                   <div className="border-t border-gray-100 my-0.5" />
                   <button
                     onClick={(e) => { e.stopPropagation(); setMenuOpen(false); onDelete(item.id) }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50"
+                    className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
                   >
                     <Trash2 size={14} /> Eliminar
                   </button>
@@ -106,14 +106,13 @@ export function ItemCard({ item, onCycleStatus, onEdit, onDelete }) {
           </div>
         </div>
 
-        {/* Linha: categoria + atualização + status */}
+        {/* Categoria + status */}
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs text-gray-400 truncate leading-tight">
             {item.categories ? `${item.categories.emoji} ${item.categories.name} · ` : ''}
             {updaterName} · {timeAgo(item.updated_at)}
           </p>
 
-          {/* Toggle de status */}
           <button
             onClick={handleStatusClick}
             className={cn(
