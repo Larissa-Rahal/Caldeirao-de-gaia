@@ -7,7 +7,7 @@ import { Avatar } from '@/components/ui/Avatar'
 import { useHouse } from '@/contexts/HouseContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { copyToClipboard } from '@/lib/utils'
-import { buildInviteUrl } from '@/lib/defaults'
+import { buildInviteMessage } from '@/lib/defaults'
 import toast from 'react-hot-toast'
 
 export function SettingsModal({ open, onClose, categories = [], addCategory, deleteCategory }) {
@@ -22,11 +22,10 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
 
   if (!activeHouse) return null
 
-  const isOwner   = activeHouse.myRole === 'owner'
-  const inviteUrl = buildInviteUrl(activeHouse.invite_code)
+  const isOwner = activeHouse.myRole === 'owner'
 
   async function handleShare() {
-    const inviteMessage = `🫧 Oi! Te convido para o Caldeirão de Gaia — ${activeHouse.name}.\n\nUse o código ${activeHouse.invite_code}\n${inviteUrl}`
+    const inviteMessage = buildInviteMessage(activeHouse.name, activeHouse.invite_code)
     const shareData = {
       title: `Convite — ${activeHouse.name}`,
       text:  inviteMessage,

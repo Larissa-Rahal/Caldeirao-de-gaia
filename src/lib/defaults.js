@@ -185,6 +185,11 @@ export const STATUS_CYCLE = {
   out_of_stock: 'in_stock',
 }
 
-export function buildInviteUrl() {
-  return 'https://estoque-casa-five.vercel.app/'
+export function buildInviteUrl(inviteCode) {
+  const baseUrl = 'https://estoque-casa-five.vercel.app/'
+  return inviteCode ? `${baseUrl}?invite=${inviteCode}` : baseUrl
+}
+
+export function buildInviteMessage(houseName, inviteCode) {
+  return `🫧 Oi! Te convido para o Caldeirão de Gaia — ${houseName}.\n\nUse o código *${inviteCode} ou entre pelo link:*\n${buildInviteUrl(inviteCode)}`
 }

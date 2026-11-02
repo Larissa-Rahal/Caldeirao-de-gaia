@@ -5,6 +5,7 @@ import {
   STATUS_CYCLE,
   getCategoryPlaceholder,
   buildInviteUrl,
+  buildInviteMessage,
 } from '@/lib/defaults'
 
 describe('src/lib/defaults.js', () => {
@@ -62,10 +63,17 @@ describe('src/lib/defaults.js', () => {
     })
   })
 
-  describe('buildInviteUrl()', () => {
-    it('retorna a URL pública do aplicativo', () => {
-      const url = buildInviteUrl('5AB9DA')
-      expect(url).toBe('https://estoque-casa-five.vercel.app/')
+  describe('buildInviteUrl() & buildInviteMessage()', () => {
+    it('retorna a URL pública com ?invite=CODIGO quando o código é informado', () => {
+      expect(buildInviteUrl('C99AB3')).toBe('https://estoque-casa-five.vercel.app/?invite=C99AB3')
+      expect(buildInviteUrl()).toBe('https://estoque-casa-five.vercel.app/')
+    })
+
+    it('formata a mensagem de convite com código em negrito (*CODIGO*) e link com ?invite=CODIGO', () => {
+      const msg = buildInviteMessage('Caldeirão TESTE', 'C99AB3')
+      expect(msg).toBe(
+        '🫧 Oi! Te convido para o Caldeirão de Gaia — Caldeirão TESTE.\n\nUse o código *C99AB3*\nhttps://estoque-casa-five.vercel.app/?invite=C99AB3'
+      )
     })
   })
 })
