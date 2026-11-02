@@ -27,10 +27,10 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
   const inviteUrl = buildInviteUrl(activeHouse.invite_code)
 
   async function handleShare() {
+    const inviteMessage = `🫧 Oi! Te convido para o Caldeirão de Gaia — ${activeHouse.name}.\n\nUse o código ${activeHouse.invite_code}\n${inviteUrl}`
     const shareData = {
       title: `Convite — ${activeHouse.name}`,
-      text:  `🫧 Oi! Te convido para o Caldeirão de Gaia — ${activeHouse.name}.\n\nUse o código *${activeHouse.invite_code}*`,
-      url:   inviteUrl,
+      text:  inviteMessage,
     }
     if (navigator.share && navigator.canShare?.(shareData)) {
       try {
@@ -39,7 +39,7 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
         if (err.name !== 'AbortError') toast.error('Erro ao compartilhar.')
       }
     } else {
-      await copyToClipboard(`🫧 ${activeHouse.name} — Caldeirão de Gaia\nCódigo: ${activeHouse.invite_code}\n${inviteUrl}`)
+      await copyToClipboard(inviteMessage)
       toast.success('Convite copiado!')
     }
   }

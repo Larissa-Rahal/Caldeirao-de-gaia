@@ -181,7 +181,6 @@ export const STATUS_CYCLE = {
   out_of_stock: 'in_stock',
 }
 
-export function buildInviteUrl(code) {
-  var origin = (typeof window !== 'undefined') ? window.location.origin : ''
-  return origin + '/?invite=' + code
+export function buildInviteUrl() {
+  return 'https://estoque-casa-five.vercel.app/'
 }
