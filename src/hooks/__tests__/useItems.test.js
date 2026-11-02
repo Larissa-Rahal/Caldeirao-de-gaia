@@ -85,6 +85,43 @@ describe('src/hooks/useItems.js', () => {
     expect(result.current.itemsByCategory['cat-1'].items).toHaveLength(1)
   })
 
+  it('normaliza itens com qty_value = 0 para out_of_stock e sincroniza quantidade ao mudar status ou valor', async () => {
+    const zeroQtyInStockRow = {
+      ...sampleRawItem,
+      id:        'item-zero',
+      qty_value: 0,
+      qty_unit:  'L',
+      status:    'in_stock',
+    }
+    const fetchBuilder  = createQueryBuilderMock({ data: [zeroQtyInStockRow], error: null })
+    const updateBuilder = createQueryBuilderMock({ data: null, error: null })
+
+    supabase.from
+      .mockReturnValueOnce(fetchBuilder)
+      .mockReturnValueOnce(updateBuilder)
+      .mockReturnValueOnce(updateBuilder)
+
+    const { result } = renderHook(() => useItems())
+    await waitFor(() => expect(result.current.loading).toBe(false))
+
+    // Normalizado automaticamente para out_of_stock por ter qty_value = 0
+    expect(result.current.items[0].status).toBe('out_of_stock')
+
+    // Ao marcar como in_stock (ex: Modo Mercado), qty_value passa de 0 para 1
+    await act(async () => {
+      await result.current.setStatus('item-zero', 'in_stock')
+    })
+    expect(result.current.items[0].status).toBe('in_stock')
+    expect(result.current.items[0].qty_value).toBe(1)
+
+    // Ao zerar a quantidade manualmente (updateQtyValue), status volta para out_of_stock
+    await act(async () => {
+      await result.current.updateQtyValue('item-zero', 0)
+    })
+    expect(result.current.items[0].qty_value).toBe(0)
+    expect(result.current.items[0].status).toBe('out_of_stock')
+  })
+
   it('preenche estado error quando a listagem do Supabase falha', async () => {
     const fetchBuilder = createQueryBuilderMock({
       data:  null,

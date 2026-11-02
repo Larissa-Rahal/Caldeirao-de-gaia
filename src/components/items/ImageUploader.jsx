@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Upload, Loader2, X, Camera, Images } from 'lucide-react'
+import { Loader2, X, Camera, Images } from 'lucide-react'
 import { uploadProductImage } from '@/lib/storage'
 import { useAuth } from '@/contexts/AuthContext'
 import { cn } from '@/lib/utils'
@@ -53,7 +53,7 @@ export function ImageUploader({ value, onChange }) {
   const displayImage = preview || value || null
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1.5">
 
       {/* Input câmara — capture="environment" força câmara traseira em mobile */}
       <input
@@ -82,19 +82,19 @@ export function ImageUploader({ value, onChange }) {
           <img
             src={displayImage}
             alt="Imagem carregada"
-            className="w-full h-40 object-contain p-2"
+            className="w-full h-32 object-contain p-2"
           />
           {loading && (
-            <div className="absolute inset-0 bg-white/80 flex flex-col items-center justify-center gap-2">
-              <Loader2 size={24} className="animate-spin text-primary-600" />
-              <p className="text-xs text-gray-500">A enviar...</p>
+            <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center gap-2">
+              <Loader2 size={24} className="animate-spin text-amber-400" />
+              <p className="text-xs text-white">A enviar...</p>
             </div>
           )}
           {!loading && (
             <button
               type="button"
               onClick={handleClear}
-              className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow border border-gray-200 text-gray-500 hover:text-red-500 transition"
+              className="absolute top-2 right-2 p-1.5 bg-white rounded-full shadow border border-gray-200 text-gray-500 hover:text-red-600 transition"
               aria-label="Remover imagem"
             >
               <X size={14} />
@@ -102,53 +102,47 @@ export function ImageUploader({ value, onChange }) {
           )}
         </div>
       ) : (
-        <>
-          {/* Zona drag-and-drop (desktop) */}
-          <div
-            onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
-            onDragLeave={() => setDragOver(false)}
-            onDrop={handleDrop}
-            className={cn(
-              'w-full flex items-center justify-center py-4 rounded-2xl border-2 border-dashed transition-colors',
-              dragOver ? 'border-primary-400 bg-primary-50' : 'border-gray-200 bg-gray-50',
-              loading && 'opacity-50'
-            )}
-          >
-            {loading ? (
-              <Loader2 size={20} className="animate-spin text-primary-500" />
-            ) : (
-              <p className="text-xs text-gray-400">
-                Arrasta uma imagem aqui · ou usa os botões abaixo
-              </p>
-            )}
-          </div>
-
-          {/* Botões câmara + galeria */}
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true) }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={handleDrop}
+          className={cn(
+            'w-full flex flex-col gap-2 p-3 rounded-2xl border-2 border-dashed transition-colors',
+            dragOver ? 'border-primary-400 bg-primary-50' : 'border-gray-200 bg-gray-50',
+            loading && 'opacity-50'
+          )}
+        >
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => cameraRef.current?.click()}
               disabled={loading}
-              className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition disabled:opacity-40"
+              className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-primary-400 hover:bg-primary-50 transition disabled:opacity-40"
             >
-              <Camera size={18} />
+              <Camera size={17} />
               Câmara
             </button>
             <button
               type="button"
               onClick={() => galleryRef.current?.click()}
               disabled={loading}
-              className="flex items-center justify-center gap-2 py-3 rounded-xl border-2 border-gray-200 bg-white text-sm font-medium text-gray-600 hover:border-primary-300 hover:bg-primary-50 hover:text-primary-700 transition disabled:opacity-40"
+              className="flex items-center justify-center gap-2 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:border-primary-400 hover:bg-primary-50 transition disabled:opacity-40"
             >
-              <Images size={18} />
+              <Images size={17} />
               Galeria
             </button>
           </div>
 
-          <p className="text-xs text-gray-400 text-center">
-            JPG, PNG, WebP · máx. 5MB
-          </p>
-        </>
+          {loading ? (
+            <div className="flex items-center justify-center py-1">
+              <Loader2 size={18} className="animate-spin text-primary-500" />
+            </div>
+          ) : (
+            <p className="text-[11px] text-gray-400 text-center">
+              Arraste uma imagem aqui ou escolha acima · JPG, PNG, WebP (máx. 5MB)
+            </p>
+          )}
+        </div>
       )}
 
       {error && (

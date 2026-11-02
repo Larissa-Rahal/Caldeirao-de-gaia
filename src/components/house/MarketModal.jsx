@@ -116,7 +116,7 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
                 <Share2 size={16} />
               </button>
               <button onClick={handleRepoeAll}
-                className="p-2 rounded-xl text-green-600 hover:bg-green-50 transition"
+                className="p-2 rounded-xl text-green-800 hover:bg-green-50 transition"
                 title="Repor todos">
                 <CheckCheck size={16} />
               </button>
@@ -124,7 +124,7 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
           </div>
 
           {/* Lista agrupada por categoria */}
-          <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto -mx-5 px-5">
+          <div className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto scrollbar-hide -mx-5 px-5">
             {grouped.map(([key, group]) => (
               <div key={key}>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
@@ -137,7 +137,9 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
                     const productBrand = item.product?.brand ?? item.brand ?? null
                     const qtyUnit      = item.qty_unit || item.product?.default_unit || item.default_unit || 'un'
                     const placeholder  = getCategoryPlaceholder(
-                      item.category?.name ?? '', item.category?.emoji ?? '📦'
+                      item.category?.name ?? '',
+                      item.category?.emoji ?? '📦',
+                      productName
                     )
                     return (
                       <button
@@ -161,14 +163,15 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
                         </div>
 
                         {/* Imagem */}
-                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-gray-100 flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg overflow-hidden bg-gray-50 border border-gray-200 flex-shrink-0">
                           <img src={item.image_url || item.product?.image_url || placeholder} alt={productName}
-                            className="w-full h-full object-contain p-0.5" />
+                            className="w-full h-full object-contain p-0.5"
+                            onError={e => { e.target.src = placeholder }} />
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
-                          <p className={cn('text-sm font-medium', isChecked && 'line-through text-gray-400')}>
+                          <p className={cn('text-sm font-medium text-gray-900', isChecked && 'line-through text-gray-400')}>
                             {productName}
                             {productBrand && (
                               <span className="text-xs font-normal text-gray-400 ml-1.5">· {productBrand}</span>
@@ -183,8 +186,10 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
 
                         {/* Badge status */}
                         <span className={cn(
-                          'text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0',
-                          item.status === 'out_of_stock' ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700'
+                          'text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 border',
+                          item.status === 'out_of_stock'
+                            ? 'bg-red-100 text-red-800 border-red-200'
+                            : 'bg-amber-100 text-amber-800 border-amber-200'
                         )}>
                           {item.status === 'out_of_stock' ? 'Em Falta' : 'Acabando'}
                         </span>
@@ -198,7 +203,7 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
 
           {allChecked && (
             <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-xl text-center">
-              <p className="text-sm text-green-700 font-medium">🎉 Compras concluídas! Todos os itens repostos.</p>
+              <p className="text-sm text-green-800 font-medium">🎉 Compras concluídas! Todos os itens repostos.</p>
             </div>
           )}
         </>

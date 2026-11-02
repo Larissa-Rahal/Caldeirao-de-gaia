@@ -10,13 +10,19 @@ const ITEM_SELECT =
 /**
  * Normaliza os dados do item garantindo que `name`, `brand`, `barcode` e `default_unit`
  * estejam disponíveis a partir de `products` e que `qty_unit` tenha fallback para `product.default_unit`.
+ * Também garante que itens com `qty_value === 0` nunca fiquem marcados como `in_stock`.
  */
 function normalizeItem(row) {
   if (!row) return row
   const product     = row.product ?? {}
   const defaultUnit = product.default_unit ?? 'un'
+  const hasQty      = row.qty_value != null && row.qty_value !== ''
+  const numericQty  = hasQty ? Number(row.qty_value) : null
+  const status      = hasQty && numericQty <= 0 ? 'out_of_stock' : row.status
+
   return {
     ...row,
+    status,
     product: {
       ...product,
       name:         product.name         ?? '',
@@ -142,7 +148,6 @@ export function useItems() {
       .map(normalizeItem)
       .sort((a, b) => (a.product?.name ?? '').localeCompare(b.product?.name ?? ''))
     setItems(normalized)
-    setError(null)
     setLoading(false)
   }, [activeHouse])
 
@@ -156,17 +161,25 @@ export function useItems() {
       channelRef.current = null
     }
 
+    const channelName = `items:${activeHouse.id}:${Date.now()}`
+
     const channel = supabase
-      .channel(`items:${activeHouse.id}:${Date.now()}`)
+      .channel(channelName)
       .on(
         'postgres_changes',
-        { event: '*', schema: 'public', table: 'items', filter: `house_id=eq.${activeHouse.id}` },
+        {
+          event:  '*',
+          schema: 'public',
+          table:  'items',
+          filter: `house_id=eq.${activeHouse.id}`,
+        },
         async (payload) => {
           const id = payload.new?.id ?? payload.old?.id
-          if (id && pendingRef.current.has(id)) return
+
+          if (pendingRef.current.has(id)) return
 
           if (payload.eventType === 'DELETE') {
-            setItems(prev => prev.filter(i => i.id !== payload.old?.id))
+            setItems(prev => prev.filter(i => i.id !== payload.old.id))
             return
           }
 
@@ -178,12 +191,11 @@ export function useItems() {
               .single()
             if (data) {
               const normalized = normalizeItem(data)
-              setItems(prev =>
-                prev.find(i => i.id === normalized.id)
-                  ? prev
-                  : [...prev, normalized].sort((a, b) =>
-                      (a.product?.name ?? '').localeCompare(b.product?.name ?? ''))
-              )
+              setItems(prev => {
+                if (prev.some(i => i.id === normalized.id)) return prev
+                return [...prev, normalized].sort((a, b) =>
+                  (a.product?.name ?? '').localeCompare(b.product?.name ?? ''))
+              })
             }
             return
           }
@@ -229,9 +241,6 @@ export function useItems() {
 
   /**
    * Adiciona um novo item ao estoque.
-   *   name, brand, barcode, defaultUnit — upsert em products
-   *   categoryId, notes, imageUrl       — metadados do item
-   *   qty_value, qty_unit               — quantidade tipada (com fallback para default_unit)
    */
   async function addItem({ productId: existingProductId, name, brand, barcode, defaultUnit, categoryId, notes, imageUrl, qty_value, qty_unit }) {
     const resolvedDefaultUnit = defaultUnit || qty_unit || 'un'
@@ -245,6 +254,10 @@ export function useItems() {
       userId: user.id,
     })
 
+    const hasQty        = qty_value != null && qty_value !== ''
+    const numericQty    = hasQty ? Number(qty_value) : null
+    const initialStatus = hasQty && numericQty <= 0 ? 'out_of_stock' : 'in_stock'
+
     const { data, error: err } = await supabase
       .from('items')
       .insert({
@@ -253,9 +266,9 @@ export function useItems() {
         category_id: categoryId    || null,
         notes:       notes?.trim() || null,
         image_url:   imageUrl      || null,
-        qty_value:   qty_value != null && qty_value !== '' ? Number(qty_value) : null,
+        qty_value:   numericQty,
         qty_unit:    qty_unit      || resolvedDefaultUnit,
-        status:      'in_stock',
+        status:      initialStatus,
         created_by:  user.id,
         updated_by:  user.id,
       })
@@ -273,7 +286,6 @@ export function useItems() {
 
   /**
    * Edita um item existente.
-   * Se nome/marca/barcode/default_unit mudou, faz upsert em products e vincula o product_id.
    */
   async function updateItem(itemId, { name, brand, barcode, defaultUnit, categoryId, notes, imageUrl, qty_value, qty_unit }) {
     const item = items.find(i => i.id === itemId)
@@ -301,6 +313,15 @@ export function useItems() {
       ? (qty_unit || defaultUnit || item.product?.default_unit || 'un')
       : (item.qty_unit || item.product?.default_unit || 'un')
 
+    const nextQtyValue = qty_value !== undefined
+      ? (qty_value != null && qty_value !== '' ? Number(qty_value) : null)
+      : item.qty_value
+
+    let nextStatus = item.status
+    if (qty_value !== undefined && nextQtyValue != null) {
+      nextStatus = nextQtyValue <= 0 ? 'out_of_stock' : (item.status === 'out_of_stock' ? 'in_stock' : item.status)
+    }
+
     const { data, error: err } = await supabase
       .from('items')
       .update({
@@ -308,10 +329,9 @@ export function useItems() {
         category_id: categoryId !== undefined ? (categoryId || null)    : item.category_id,
         notes:       notes      !== undefined ? (notes?.trim() || null) : item.notes,
         image_url:   imageUrl   !== undefined ? (imageUrl || null)      : item.image_url,
-        qty_value:   qty_value  !== undefined
-          ? (qty_value != null && qty_value !== '' ? Number(qty_value) : null)
-          : item.qty_value,
+        qty_value:   nextQtyValue,
         qty_unit:    resolvedQtyUnit,
+        status:      nextStatus,
         updated_by:  user.id,
       })
       .eq('id', itemId)
@@ -329,20 +349,26 @@ export function useItems() {
 
   function cycleStatus(itemId, currentStatus) {
     const next = STATUS_CYCLE[currentStatus]
-    const localChanges  = { status: next, updated_by: user.id, updated_at: new Date().toISOString(),
-      ...(next === 'out_of_stock' ? { qty_value: null } : {}) }
-    const serverChanges = { status: next, updated_by: user.id,
-      ...(next === 'out_of_stock' ? { qty_value: null } : {}) }
+    const item = items.find(i => i.id === itemId)
+    const qtyPatch = next === 'out_of_stock'
+      ? { qty_value: item?.qty_value != null ? 0 : null }
+      : (item?.qty_value != null && Number(item.qty_value) <= 0 ? { qty_value: 1 } : {})
+
+    const localChanges  = { status: next, updated_by: user.id, updated_at: new Date().toISOString(), ...qtyPatch }
+    const serverChanges = { status: next, updated_by: user.id, ...qtyPatch }
     return optimisticUpdate(itemId, localChanges,
       () => supabase.from('items').update(serverChanges).eq('id', itemId)
         .then(({ error: err }) => { if (err) throw err }))
   }
 
   function setStatus(itemId, status) {
-    const localChanges  = { status, updated_by: user.id, updated_at: new Date().toISOString(),
-      ...(status === 'out_of_stock' ? { qty_value: null } : {}) }
-    const serverChanges = { status, updated_by: user.id,
-      ...(status === 'out_of_stock' ? { qty_value: null } : {}) }
+    const item = items.find(i => i.id === itemId)
+    const qtyPatch = status === 'out_of_stock'
+      ? { qty_value: item?.qty_value != null ? 0 : null }
+      : (item?.qty_value != null && Number(item.qty_value) <= 0 ? { qty_value: 1 } : {})
+
+    const localChanges  = { status, updated_by: user.id, updated_at: new Date().toISOString(), ...qtyPatch }
+    const serverChanges = { status, updated_by: user.id, ...qtyPatch }
     return optimisticUpdate(itemId, localChanges,
       () => supabase.from('items').update(serverChanges).eq('id', itemId)
         .then(({ error: err }) => { if (err) throw err }))
@@ -364,11 +390,13 @@ export function useItems() {
   }
 
   function updateQtyValue(itemId, value) {
+    const newVal    = Math.max(0, Number(value) || 0)
+    const newStatus = newVal === 0 ? 'out_of_stock' : newVal === 1 ? 'running_low' : 'in_stock'
     return optimisticUpdate(
       itemId,
-      { qty_value: value, updated_by: user.id, updated_at: new Date().toISOString() },
+      { qty_value: newVal, status: newStatus, updated_by: user.id, updated_at: new Date().toISOString() },
       () => supabase.from('items')
-        .update({ qty_value: value, updated_by: user.id })
+        .update({ qty_value: newVal, status: newStatus, updated_by: user.id })
         .eq('id', itemId)
         .then(({ error: err }) => { if (err) throw err })
     )

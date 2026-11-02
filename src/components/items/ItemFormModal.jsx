@@ -45,7 +45,7 @@ export function ItemFormModal({
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState('')
 
-  // IDs e nomes normalizados de produtos que já estão neste Caldeirão
+  // IDs de produtos que já estão neste Caldeirão
   const existingProductIds = useMemo(() => {
     const s = new Set(justAddedIds)
     for (const item of existingItems) {
@@ -135,6 +135,15 @@ export function ItemFormModal({
       }))
       if (field === 'name') setShowSuggestions(true)
     }
+  }
+
+  function stepFormQuantity(delta) {
+    setForm(prev => {
+      const current = Number(prev.qtyValue) || 0
+      const step = ['g', 'mL', 'mg'].includes(prev.qtyUnit) ? 100 : 1
+      const next = Math.max(0, Number((current + delta * step).toFixed(2)))
+      return { ...prev, qtyValue: String(next) }
+    })
   }
 
   function selectCatalogProductForForm(prod) {
@@ -245,7 +254,7 @@ export function ItemFormModal({
 
       {/* Seletor de Abas ao Adicionar: Catálogo do Banco vs Novo Produto */}
       {!isEdit && catalogProducts.length > 0 && (
-        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-4">
+        <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-3">
           <button
             type="button"
             onClick={() => setTab('catalog')}
@@ -314,7 +323,7 @@ export function ItemFormModal({
           )}
 
           {/* Lista de produtos do banco */}
-          <div className="flex flex-col gap-2 max-h-[52vh] overflow-y-auto pr-1">
+          <div className="flex flex-col gap-2 max-h-[52vh] overflow-y-auto scrollbar-hide pr-0.5">
             {catalogLoading ? (
               <p className="text-xs text-gray-400 text-center py-8">Carregando produtos do banco...</p>
             ) : filteredCatalog.length === 0 ? (
@@ -363,7 +372,7 @@ export function ItemFormModal({
                     </div>
 
                     {alreadyInHouse ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold flex-shrink-0">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-100 text-green-800 text-xs font-semibold flex-shrink-0">
                         <Check size={13} /> No Caldeirão
                       </span>
                     ) : (
@@ -401,7 +410,7 @@ export function ItemFormModal({
         </div>
       ) : (
         /* ABA 2: Formulário de Criar / Personalizar / Editar */
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
 
           {/* Badge indicando quando está vinculado a um produto existente do catálogo */}
           {!isEdit && form.productId && (
@@ -496,7 +505,7 @@ export function ItemFormModal({
             <select
               value={form.categoryId}
               onChange={set('categoryId')}
-              className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="">Sem categoria</option>
               {categories.map(cat => (
@@ -524,10 +533,15 @@ export function ItemFormModal({
                         : t.key === 'weight'
                           ? (!UNIT_OPTIONS.includes(form.defaultUnit) ? form.defaultUnit : 'kg')
                           : form.defaultUnit
-                      setForm(p => ({ ...p, qtyType: t.key, qtyValue: '', qtyUnit: nextUnit }))
+                      setForm(p => ({
+                        ...p,
+                        qtyType: t.key,
+                        qtyValue: t.key === 'none' ? '' : (p.qtyValue || '1'),
+                        qtyUnit: nextUnit,
+                      }))
                     }}
-                    className={cn('px-2.5 py-1 rounded-md font-medium transition',
-                      form.qtyType === t.key ? 'bg-white shadow text-primary-700' : 'text-gray-500'
+                    className={cn('px-2.5 py-1 rounded-md font-semibold transition',
+                      form.qtyType === t.key ? 'bg-white shadow text-primary-700' : 'text-gray-500 hover:text-gray-700'
                     )}>
                     {t.label}
                   </button>
@@ -535,55 +549,62 @@ export function ItemFormModal({
               </div>
             </div>
 
-            {form.qtyType === 'unit' && (
+            {form.qtyType !== 'none' && (
               <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
-                  <button type="button"
-                    onClick={() => setForm(p => ({ ...p, qtyValue: String(Math.max(0, (Number(p.qtyValue) || 0) - 1)) }))}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-200 transition font-bold text-base">
+                <div className="flex items-center gap-1 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5">
+                  <button
+                    type="button"
+                    onClick={() => stepFormQuantity(-1)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-200 transition font-bold text-base"
+                    aria-label="Diminuir quantidade"
+                  >
                     −
                   </button>
-                  <input type="number" min="0" step="1" value={form.qtyValue}
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={form.qtyValue}
                     onChange={e => setForm(p => ({ ...p, qtyValue: e.target.value }))}
-                    placeholder="0"
-                    className="flex-1 text-center text-lg font-semibold bg-transparent outline-none text-gray-900 w-16"
-                    inputMode="numeric" />
-                  <button type="button"
-                    onClick={() => setForm(p => ({ ...p, qtyValue: String((Number(p.qtyValue) || 0) + 1) }))}
-                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-green-600 hover:border-green-200 transition font-bold text-base">
+                    placeholder={form.qtyType === 'weight' ? 'Ex: 500' : '0'}
+                    className="flex-1 text-center text-base font-semibold bg-transparent outline-none text-gray-900 w-16"
+                    inputMode="decimal"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => stepFormQuantity(1)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-green-600 hover:border-green-200 transition font-bold text-base"
+                    aria-label="Aumentar quantidade"
+                  >
                     +
                   </button>
                 </div>
-                <select
-                  value={form.qtyUnit}
-                  onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value, defaultUnit: e.target.value }))}
-                  className="rounded-xl border border-gray-300 bg-white px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500">
-                  <option value="un">un.</option>
-                  <option value="unid">unid.</option>
-                  <option value="cx">cx.</option>
-                  <option value="pct">pct.</option>
-                  <option value="par">par</option>
-                </select>
-              </div>
-            )}
 
-            {form.qtyType === 'weight' && (
-              <div className="flex gap-2">
-                <input type="number" min="0" step="any" value={form.qtyValue}
-                  onChange={e => setForm(p => ({ ...p, qtyValue: e.target.value }))}
-                  placeholder="Ex: 500"
-                  className="flex-1 rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500"
-                  inputMode="decimal" />
-                <select
-                  value={form.qtyUnit}
-                  onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value, defaultUnit: e.target.value }))}
-                  className="rounded-xl border border-gray-300 bg-white px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500">
-                  <option value="kg">kg</option>
-                  <option value="g">g</option>
-                  <option value="L">L</option>
-                  <option value="mL">mL</option>
-                  <option value="mg">mg</option>
-                </select>
+                {form.qtyType === 'unit' ? (
+                  <select
+                    value={form.qtyUnit}
+                    onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value, defaultUnit: e.target.value }))}
+                    className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="un">un.</option>
+                    <option value="unid">unid.</option>
+                    <option value="cx">cx.</option>
+                    <option value="pct">pct.</option>
+                    <option value="par">par</option>
+                  </select>
+                ) : (
+                  <select
+                    value={form.qtyUnit}
+                    onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value, defaultUnit: e.target.value }))}
+                    className="rounded-xl border border-gray-300 bg-white px-2.5 py-2 text-sm outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value="kg">kg</option>
+                    <option value="g">g</option>
+                    <option value="L">L</option>
+                    <option value="mL">mL</option>
+                    <option value="mg">mg</option>
+                  </select>
+                )}
               </div>
             )}
 
@@ -601,14 +622,14 @@ export function ItemFormModal({
           />
 
           {/* Imagem do produto */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-gray-700">Imagem do produto</span>
               <div className="flex items-center gap-2">
                 {form.imageUrl && (
                   <button type="button"
                     onClick={() => setForm(prev => ({ ...prev, imageUrl: '' }))}
-                    className="text-xs text-red-500 hover:text-red-700 flex items-center gap-1 transition">
+                    className="text-xs text-red-600 hover:opacity-80 flex items-center gap-1 transition">
                     ✕ Remover
                   </button>
                 )}
@@ -617,7 +638,7 @@ export function ItemFormModal({
                     const Icon = m.icon
                     return (
                       <button key={m.key} type="button" onClick={() => setImageMode(m.key)}
-                        className={cn('flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition',
+                        className={cn('flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition',
                           imageMode === m.key ? 'bg-white shadow text-primary-700' : 'text-gray-500 hover:text-gray-700'
                         )}>
                         <Icon size={12} />

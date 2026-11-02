@@ -224,7 +224,7 @@ export function ReceiptScannerModal({
                 <button
                   type="button"
                   onClick={() => setShowKeyForm(true)}
-                  className="text-primary-600 hover:underline font-medium"
+                  className="text-primary-700 hover:underline font-medium"
                 >
                   Trocar chave API
                 </button>
@@ -250,31 +250,31 @@ export function ReceiptScannerModal({
           className="hidden"
         />
 
-        {/* Estado inicial: botões de captura */}
+        {/* Estado inicial: botões de captura compatíveis com Tema Claro e Tema Escuro */}
         {!analyzing && !hasResult && (
-          <div className="flex flex-col gap-3 py-2">
+          <div className="flex flex-col gap-3 py-1">
             <p className="text-xs text-gray-500 text-center px-2">
               Fotografe o cupom fiscal do mercado. A IA identifica os produtos abreviados e soma as quantidades aos itens que você já tem no Caldeirão!
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <button
                 type="button"
                 onClick={() => cameraInputRef.current?.click()}
-                className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed border-primary-300 bg-primary-50/50 hover:bg-primary-50 text-primary-700 transition cursor-pointer"
+                className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-primary-50 text-gray-800 transition cursor-pointer"
               >
-                <Camera size={28} className="text-primary-600" />
-                <span className="text-sm font-semibold">Fotografar Nota</span>
+                <Camera size={28} className="text-primary-700" />
+                <span className="text-sm font-semibold text-gray-900">Fotografar Nota</span>
                 <span className="text-[11px] text-gray-400">Usar câmera do celular</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => galleryInputRef.current?.click()}
-                className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed border-gray-300 hover:border-primary-300 bg-gray-50/60 hover:bg-primary-50/30 text-gray-700 transition cursor-pointer"
+                className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed border-gray-200 bg-gray-50 hover:bg-primary-50 text-gray-800 transition cursor-pointer"
               >
-                <ImagePlus size={28} className="text-gray-500" />
-                <span className="text-sm font-semibold">Escolher da Galeria</span>
+                <ImagePlus size={28} className="text-primary-700" />
+                <span className="text-sm font-semibold text-gray-900">Escolher da Galeria</span>
                 <span className="text-[11px] text-gray-400">Enviar foto ou print</span>
               </button>
             </div>
@@ -289,7 +289,7 @@ export function ReceiptScannerModal({
                 <img src={previewUrl} alt="Nota fiscal" className="w-full h-full object-cover opacity-75" />
               </div>
             )}
-            <div className="flex items-center gap-2 text-primary-600 font-semibold text-sm">
+            <div className="flex items-center gap-2 text-primary-700 font-semibold text-sm">
               <Sparkles size={18} className="animate-spin" />
               Decifrando o pergaminho fiscal...
             </div>
@@ -301,7 +301,7 @@ export function ReceiptScannerModal({
 
         {/* Resultado da Conferência */}
         {!analyzing && hasResult && (
-          <div className="flex flex-col gap-4 max-h-[65vh] overflow-y-auto pr-1">
+          <div className="flex flex-col gap-4 max-h-[65vh] overflow-y-auto scrollbar-hide pr-1">
 
             {/* Barra de topo do resultado */}
             <div className="flex items-center justify-between gap-2 bg-gray-50 px-3 py-2 rounded-xl border border-gray-200">
@@ -326,7 +326,7 @@ export function ReceiptScannerModal({
               <button
                 type="button"
                 onClick={resetState}
-                className="flex items-center gap-1 text-xs text-primary-600 hover:underline font-medium flex-shrink-0"
+                className="flex items-center gap-1 text-xs text-primary-700 hover:underline font-medium flex-shrink-0"
               >
                 <RotateCcw size={13} /> Outra foto
               </button>
@@ -334,7 +334,7 @@ export function ReceiptScannerModal({
 
             {/* SEÇÃO 1: Itens já cadastrados no Caldeirão */}
             <div className="flex flex-col gap-2">
-              <h4 className="text-xs font-bold uppercase tracking-wider text-green-700 flex items-center gap-1.5">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-green-800 flex items-center gap-1.5">
                 ✅ Encontrados no seu Caldeirão ({matched.length})
               </h4>
 
@@ -351,7 +351,7 @@ export function ReceiptScannerModal({
                         key={entry.itemId}
                         className={`flex items-center justify-between gap-2 p-3 rounded-xl border transition ${
                           entry.selected
-                            ? 'bg-green-50/40 border-green-300'
+                            ? 'bg-green-50 border-green-200'
                             : 'bg-gray-50 border-gray-200 opacity-60'
                         }`}
                       >
@@ -371,7 +371,7 @@ export function ReceiptScannerModal({
                                 Na nota: {entry.rawTexts.join(' + ')}
                               </p>
                             )}
-                            <p className="text-xs text-green-700 font-medium mt-0.5">
+                            <p className="text-xs text-green-800 font-medium mt-0.5">
                               Tinha: <strong>{entry.currentQty} {entry.unit}</strong> → Vai para:{' '}
                               <strong>{newTotal} {entry.unit}</strong> (Em Estoque)
                             </p>
@@ -441,7 +441,7 @@ export function ReceiptScannerModal({
                           {entry.brand && (
                             <span className="text-xs text-gray-400 font-normal ml-1">· {entry.brand}</span>
                           )}
-                          <span className="ml-1.5 text-xs font-semibold text-primary-600">
+                          <span className="ml-1.5 text-xs font-semibold text-primary-700">
                             ({entry.qty} {entry.unit})
                           </span>
                         </p>
@@ -469,7 +469,7 @@ export function ReceiptScannerModal({
                         )}
 
                         {entry.added ? (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-100 text-green-700 text-xs font-semibold">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-green-100 text-green-800 text-xs font-semibold">
                             <Check size={13} /> Cadastrado
                           </span>
                         ) : (

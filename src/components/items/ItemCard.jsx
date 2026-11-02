@@ -319,15 +319,14 @@ function ParchmentScroll({
         {editingQty ? (
           <input
             ref={qtyInputRef}
-            type="number"
-            step="any"
+            type="text"
+            inputMode="decimal"
             value={qtyDraft}
-            onChange={e => setQtyDraft(e.target.value)}
+            onChange={e => setQtyDraft(e.target.value.replace(/[^0-9.,]/g, ''))}
             onBlur={handleQtyBlur}
             onKeyDown={handleQtyKeyDown}
-            className="w-14 text-center text-xs font-bold rounded bg-[#FFF8EB] text-[#2C1A0B] border border-[#8C5828] outline-none px-1 py-0.5"
-            style={{ backgroundColor: '#FFF8EB', color: '#2C1A0B' }}
-            inputMode="decimal"
+            aria-label="Editar quantidade"
+            className="grimoire-qty-input flex-1 w-12 min-w-0 text-center text-xs font-bold text-[#2C1A0B] px-0.5 py-0"
             autoFocus
           />
         ) : (

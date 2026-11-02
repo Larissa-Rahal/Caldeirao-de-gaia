@@ -36,7 +36,7 @@ export function Modal({ open, onClose, title, children, className }) {
       <div className={cn(
         'relative w-full bg-white rounded-t-2xl sm:rounded-2xl shadow-xl',
         'sm:max-w-lg mx-0 sm:mx-4',
-        'max-h-[92dvh] overflow-y-auto',
+        'max-h-[92dvh] overflow-y-auto scrollbar-hide',
         className
       )}>
         {/* Handle bar (mobile) */}
@@ -45,7 +45,7 @@ export function Modal({ open, onClose, title, children, className }) {
         </div>
 
         {title && (
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3.5 border-b border-gray-100 bg-white">
             <h2 id="modal-title" className="text-base font-semibold text-gray-900">{title}</h2>
             <button
               onClick={onClose}
