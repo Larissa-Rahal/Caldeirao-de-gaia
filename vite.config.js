@@ -25,17 +25,5 @@ export default defineConfig({
   ],
   resolve: {
     alias: { '@': '/src' }
-  },
-  test: {
-    globals: true,
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.js'],
-    css: false,
-    alias: { '@': '/src' },
-    coverage: {
-      provider: 'v8',
-      reporter: ['text', 'html'],
-      exclude: ['node_modules/', 'src/test/', 'dist/']
-    }
   }
 })

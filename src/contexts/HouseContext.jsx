@@ -4,7 +4,6 @@ import { useAuth } from './AuthContext'
 import { DEFAULT_CATEGORIES } from '@/lib/defaults'
 
 const HouseContext = createContext(null)
-export { HouseContext }
 
 const ACTIVE_HOUSE_KEY = 'estoquecasa_active_house'
 
