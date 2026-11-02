@@ -10,7 +10,7 @@ export function PushNotificationToggle() {
     return (
       <div className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-gray-50 text-xs text-gray-400">
         <BellOff size={14} />
-        Notificações bloqueadas no browser
+        Notificações bloqueadas no navegador
       </div>
     )
   }
@@ -37,12 +37,11 @@ export function PushNotificationToggle() {
         <p>{subscribed ? 'Notificações ativas' : 'Ativar notificações'}</p>
         <p className="text-xs font-normal text-gray-400 mt-0.5">
           {subscribed
-            ? 'Recebes alertas quando alguém altera um item'
-            : 'Saber quando alguém altera o estoque'}
+            ? 'Você recebe alertas quando alguém altera um item'
+            : 'Saiba quando alguém altera o estoque'}
         </p>
       </div>
 
-      {/* Toggle visual */}
       <div className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 flex items-center px-0.5 ${
         subscribed ? 'bg-primary-500' : 'bg-gray-300'
       }`}>

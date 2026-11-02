@@ -24,7 +24,6 @@ export function useCategories() {
   useEffect(() => {
     if (!activeHouse) return
 
-    // Limpa canal anterior se existir
     if (channelRef.current) {
       supabase.removeChannel(channelRef.current)
       channelRef.current = null

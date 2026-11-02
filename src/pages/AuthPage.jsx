@@ -7,12 +7,11 @@ import toast from 'react-hot-toast'
 
 export function AuthPage() {
   const { signIn, signUp } = useAuth()
-  const [mode,    setMode]    = useState('login')  // 'login' | 'register'
+  const [mode,    setMode]    = useState('login')
   const [form,    setForm]    = useState({ email: '', password: '', fullName: '' })
   const [errors,  setErrors]  = useState({})
   const [loading, setLoading] = useState(false)
 
-  // Se há código de convite na URL, sugere registo
   useEffect(() => {
     if (getInviteCodeFromUrl()) setMode('register')
   }, [])
@@ -26,9 +25,9 @@ export function AuthPage() {
 
   function validate() {
     const errs = {}
-    if (!form.email.trim())    errs.email    = 'Email obrigatório'
-    if (!/\S+@\S+\.\S+/.test(form.email)) errs.email = 'Email inválido'
-    if (form.password.length < 6) errs.password = 'Mínimo 6 caracteres'
+    if (!form.email.trim())                errs.email    = 'E-mail obrigatório'
+    if (!/\S+@\S+\.\S+/.test(form.email)) errs.email    = 'E-mail inválido'
+    if (form.password.length < 6)          errs.password = 'Mínimo 6 caracteres'
     if (mode === 'register' && !form.fullName.trim()) errs.fullName = 'Nome obrigatório'
     return errs
   }
@@ -42,15 +41,15 @@ export function AuthPage() {
     try {
       if (mode === 'login') {
         await signIn({ email: form.email, password: form.password })
-        toast.success('Bem-vindo de volta!')
+        toast.success('Bem-vindo de volta! 🫧')
       } else {
         await signUp({ email: form.email, password: form.password, fullName: form.fullName })
-        toast.success('Conta criada! Podes entrar agora.')
+        toast.success('Conta criada! Você já pode entrar.')
         setMode('login')
       }
     } catch (err) {
       toast.error(err.message === 'Invalid login credentials'
-        ? 'Email ou palavra-passe incorretos.'
+        ? 'E-mail ou senha incorretos.'
         : err.message
       )
     } finally {
@@ -62,22 +61,19 @@ export function AuthPage() {
 
   return (
     <div className="min-h-dvh bg-gradient-to-br from-primary-600 to-primary-800 flex flex-col items-center justify-center px-4 py-10">
-      {/* Card */}
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10">
-        {/* Logo */}
         <div className="text-center mb-7">
           <div className="text-5xl mb-3">🫧</div>
           <h1 className="text-2xl font-bold text-gray-900">Caldeirão de Gaia</h1>
           <p className="text-sm text-gray-500 mt-1">
-            {mode === 'login' ? 'Entra na tua conta' : 'Cria a tua conta'}
+            {mode === 'login' ? 'Entre na sua conta' : 'Crie sua conta'}
           </p>
         </div>
 
-        {/* Banner de convite */}
         {inviteCode && (
           <div className="mb-5 p-3 bg-primary-50 border border-primary-200 rounded-xl text-sm text-primary-700 text-center">
-            🎉 Tens um convite! Código: <strong>{inviteCode}</strong><br />
-            {mode === 'login' ? 'Entra ou cria conta' : 'Cria conta'} para aceitar.
+            🎉 Você tem um convite! Código: <strong>{inviteCode}</strong><br />
+            {mode === 'login' ? 'Entre ou crie uma conta' : 'Crie sua conta'} para aceitar.
           </div>
         )}
 
@@ -86,7 +82,7 @@ export function AuthPage() {
             <Input
               label="Nome"
               type="text"
-              placeholder="O teu nome"
+              placeholder="Seu nome"
               value={form.fullName}
               onChange={set('fullName')}
               error={errors.fullName}
@@ -95,9 +91,9 @@ export function AuthPage() {
             />
           )}
           <Input
-            label="Email"
+            label="E-mail"
             type="email"
-            placeholder="tu@exemplo.com"
+            placeholder="voce@exemplo.com"
             value={form.email}
             onChange={set('email')}
             error={errors.email}
@@ -105,7 +101,7 @@ export function AuthPage() {
             autoFocus={mode === 'login'}
           />
           <Input
-            label="Palavra-passe"
+            label="Senha"
             type="password"
             placeholder="••••••"
             value={form.password}
@@ -119,14 +115,13 @@ export function AuthPage() {
           </Button>
         </form>
 
-        {/* Toggle modo */}
         <p className="text-center text-sm text-gray-500 mt-5">
-          {mode === 'login' ? 'Não tens conta?' : 'Já tens conta?'}{' '}
+          {mode === 'login' ? 'Não tem conta?' : 'Já tem conta?'}{' '}
           <button
             onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setErrors({}) }}
             className="text-primary-600 font-medium hover:underline"
           >
-            {mode === 'login' ? 'Cria uma aqui' : 'Entra aqui'}
+            {mode === 'login' ? 'Crie uma aqui' : 'Entre aqui'}
           </button>
         </p>
       </div>

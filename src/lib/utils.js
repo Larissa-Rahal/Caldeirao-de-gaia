@@ -1,44 +1,38 @@
 import { clsx } from 'clsx'
 
-/** Junta classes Tailwind condicionalmente */
 export function cn(...inputs) {
   return clsx(inputs)
 }
 
-/** Formata data/hora de forma relativa em pt-PT */
 export function timeAgo(dateStr) {
   if (!dateStr) return ''
   const date = new Date(dateStr)
   const now  = new Date()
-  const diff = Math.floor((now - date) / 1000) // segundos
+  const diff = Math.floor((now - date) / 1000)
 
-  if (diff < 60)          return 'agora mesmo'
-  if (diff < 3600)        return `há ${Math.floor(diff / 60)} min`
-  if (diff < 86400)       return `há ${Math.floor(diff / 3600)} h`
-  if (diff < 2592000)     return `há ${Math.floor(diff / 86400)} dias`
+  if (diff < 60)      return 'agora mesmo'
+  if (diff < 3600)    return `há ${Math.floor(diff / 60)} min`
+  if (diff < 86400)   return `há ${Math.floor(diff / 3600)} h`
+  if (diff < 2592000) return `há ${Math.floor(diff / 86400)} dias`
   return date.toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' })
 }
 
-/** Extrai o código de convite da URL actual */
 export function getInviteCodeFromUrl() {
   const params = new URLSearchParams(window.location.search)
   return params.get('invite') || null
 }
 
-/** Remove o parâmetro invite da URL sem recarregar */
 export function clearInviteFromUrl() {
   const url = new URL(window.location.href)
   url.searchParams.delete('invite')
   window.history.replaceState({}, '', url.toString())
 }
 
-/** Copia texto para a área de transferência */
 export async function copyToClipboard(text) {
   if (navigator.clipboard) {
     await navigator.clipboard.writeText(text)
     return true
   }
-  // Fallback
   const el = document.createElement('textarea')
   el.value = text
   document.body.appendChild(el)
@@ -48,7 +42,6 @@ export async function copyToClipboard(text) {
   return true
 }
 
-/** Iniciais do nome para avatar */
 export function getInitials(name = '') {
   return name
     .split(' ')

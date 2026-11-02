@@ -28,7 +28,6 @@ export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
       <header className="sticky top-0 z-30 bg-primary-600 shadow-md">
         <div className="w-full max-w-5xl mx-auto flex items-center gap-3 px-4 sm:px-6 h-14">
 
-          {/* Logo */}
           <span className="text-lg select-none">🫧</span>
 
           {/* Nome da app — só desktop */}
@@ -36,12 +35,10 @@ export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
             Caldeirão de Gaia
           </span>
 
-          {/* Seletor de casa */}
           <div className="flex-1 min-w-0">
             <HouseSwitcher onCreateHouse={onCreateHouse} onJoinHouse={onJoinHouse} />
           </div>
 
-          {/* Toggle tema */}
           <button
             onClick={toggle}
             aria-label={isDark ? 'Mudar para tema claro' : 'Mudar para tema escuro'}
@@ -51,7 +48,6 @@ export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
             {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* Avatar + menu */}
           <div className="relative">
             <button
               onClick={() => setMenuOpen(v => !v)}
@@ -72,7 +68,6 @@ export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
                 <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} aria-hidden="true" />
                 <div className="absolute right-0 top-full mt-2 z-20 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 overflow-hidden">
 
-                  {/* Info do utilizador — clicável para abrir perfil */}
                   <button
                     onClick={openProfile}
                     className="w-full flex items-center gap-3 px-3.5 py-3 border-b border-gray-100 hover:bg-gray-50 transition text-left"
@@ -91,12 +86,10 @@ export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
                     </div>
                   </button>
 
-                  {/* Toggle notificações */}
                   <div className="px-2 py-2 border-b border-gray-100">
                     <PushNotificationToggle />
                   </div>
 
-                  {/* Editar perfil */}
                   <button
                     onClick={openProfile}
                     className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
@@ -104,17 +97,15 @@ export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
                     <UserCog size={15} /> Editar perfil
                   </button>
 
-                  {/* Definições da casa */}
                   <button
                     onClick={() => { setMenuOpen(false); onOpenSettings() }}
                     className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
                   >
-                    <Settings size={15} /> Definições da casa
+                    <Settings size={15} /> Configurações da casa
                   </button>
 
                   <div className="border-t border-gray-100 my-0.5" />
 
-                  {/* Sair */}
                   <button
                     onClick={handleSignOut}
                     className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-red-600 hover:bg-red-50 transition"
@@ -128,7 +119,6 @@ export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
         </div>
       </header>
 
-      {/* Modal de perfil */}
       <ProfileModal open={profileOpen} onClose={() => setProfileOpen(false)} />
     </>
   )

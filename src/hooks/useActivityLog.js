@@ -5,12 +5,12 @@ import { useHouse } from '@/contexts/HouseContext'
 const PAGE_SIZE = 30
 
 const ACTION_CONFIG = {
-  item_created:   { label: 'adicionou',        icon: '➕', color: 'text-green-600',  bg: 'bg-green-50'  },
+  item_added:     { label: 'adicionou',        icon: '➕', color: 'text-green-600',  bg: 'bg-green-50'  },
   item_updated:   { label: 'editou',            icon: '✏️',  color: 'text-blue-600',   bg: 'bg-blue-50'   },
   item_deleted:   { label: 'removeu',           icon: '🗑️',  color: 'text-red-600',    bg: 'bg-red-50'    },
-  status_changed: { label: 'alterou estado de', icon: '🔄',  color: 'text-amber-600',  bg: 'bg-amber-50'  },
-  member_joined:  { label: 'entrou na casa',    icon: '👋',  color: 'text-primary-600',bg: 'bg-primary-50'},
-  member_removed: { label: 'saiu da casa',      icon: '👤',  color: 'text-gray-600',   bg: 'bg-gray-50'   },
+  status_changed: { label: 'alterou status de', icon: '🔄',  color: 'text-amber-600',  bg: 'bg-amber-50'  },
+  member_joined:  { label: 'entrou no caldeirão', icon: '👋', color: 'text-primary-600', bg: 'bg-primary-50' },
+  member_left:    { label: 'saiu do caldeirão',   icon: '👤', color: 'text-gray-600',   bg: 'bg-gray-50'   },
 }
 
 const STATUS_LABELS = {
@@ -36,7 +36,7 @@ export function useActivityLog() {
 
     const { data } = await supabase
       .from('activity_log')
-      .select('*, profiles(id, full_name, email)')
+      .select('*, user:profiles(id, full_name, email)')
       .eq('house_id', activeHouse.id)
       .order('created_at', { ascending: false })
       .range(from, to)

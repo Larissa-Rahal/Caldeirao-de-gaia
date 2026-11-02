@@ -1,34 +1,34 @@
 /** Categorias criadas automaticamente ao criar uma nova casa */
 export const DEFAULT_CATEGORIES = [
-  { name: 'Mercearia',        emoji: '🛒', sort_order: 0 },
-  { name: 'Higiene Pessoal',  emoji: '🪥', sort_order: 1 },
-  { name: 'Limpeza',          emoji: '🧹', sort_order: 2 },
-  { name: 'Frigorífico',      emoji: '❄️',  sort_order: 3 },
-  { name: 'Congelados',       emoji: '🧊', sort_order: 4 },
-  { name: 'Bebidas',          emoji: '🥤', sort_order: 5 },
-  { name: 'Farmácia',         emoji: '💊', sort_order: 6 },
-  { name: 'Outros',           emoji: '📦', sort_order: 7 },
+  { name: 'Mercearia',       emoji: '🛒', sort_order: 0 },
+  { name: 'Higiene Pessoal', emoji: '🪥', sort_order: 1 },
+  { name: 'Limpeza',         emoji: '🧹', sort_order: 2 },
+  { name: 'Geladeira',       emoji: '❄️',  sort_order: 3 },
+  { name: 'Congelados',      emoji: '🧊', sort_order: 4 },
+  { name: 'Bebidas',         emoji: '🥤', sort_order: 5 },
+  { name: 'Farmácia',        emoji: '💊', sort_order: 6 },
+  { name: 'Outros',          emoji: '📦', sort_order: 7 },
 ]
 
 /**
- * Placeholder SVG por categoria — ícone flat estilo "pote de despensa"
- * Retorna data URL — sem JSX, funciona em ficheiros .js
+ * Placeholder SVG por categoria — ícone flat estilo "pote de despensa".
+ * Retorna data URL — sem JSX, funciona em ficheiros .js puros.
  */
 export function getCategoryPlaceholder(categoryName, emoji) {
-  var name  = (categoryName || '').toLowerCase()
-  var icon  = emoji || '📦'
+  var name = (categoryName || '').toLowerCase()
+  var icon = emoji || '📦'
 
   var colorMap = [
-    ['mercearia',       '#F5F0E8'],
-    ['higiene',         '#F0F0FF'],
-    ['limpeza',         '#E8F5F0'],
-    ['frigori',         '#E8F4FF'],
-    ['congelados',      '#EAF4FF'],
-    ['bebidas',         '#FFF0E8'],
-    ['farm',            '#FFE8E8'],
-    ['hortifr',         '#E8FFE8'],
-    ['latic',           '#FFFDE8'],
-    ['carnes',          '#FFE8F0'],
+    ['mercearia',  '#F5F0E8'],
+    ['higiene',    '#F0F0FF'],
+    ['limpeza',    '#E8F5F0'],
+    ['frigori',    '#E8F4FF'],
+    ['congelados', '#EAF4FF'],
+    ['bebidas',    '#FFF0E8'],
+    ['farm',       '#FFE8E8'],
+    ['hortifr',    '#E8FFE8'],
+    ['latic',      '#FFFDE8'],
+    ['carnes',     '#FFE8F0'],
   ]
 
   var bg = '#F0EAF8'
@@ -46,7 +46,6 @@ export function getCategoryPlaceholder(categoryName, emoji) {
   return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg)
 }
 
-/** Labels e cores para cada status */
 export const STATUS_CONFIG = {
   in_stock: {
     label:  'Em Estoque',
@@ -77,14 +76,12 @@ export const STATUS_CONFIG = {
   },
 }
 
-/** Ciclo de status ao clicar no toggle */
 export const STATUS_CYCLE = {
   in_stock:     'running_low',
   running_low:  'out_of_stock',
   out_of_stock: 'in_stock',
 }
 
-/** Gera a URL de convite com base no código */
 export function buildInviteUrl(code) {
   var origin = (typeof window !== 'undefined') ? window.location.origin : ''
   return origin + '/?invite=' + code

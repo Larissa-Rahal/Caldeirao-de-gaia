@@ -24,7 +24,6 @@ export function usePushNotifications() {
     setSupported('serviceWorker' in navigator && 'PushManager' in window && !!VAPID_PUBLIC_KEY)
   }, [])
 
-  // Verifica se já está subscrito
   useEffect(() => {
     if (!supported || !user || !activeHouse) return
     checkSubscription()
@@ -51,25 +50,21 @@ export function usePushNotifications() {
     if (!supported || !user || !activeHouse) return
     setLoading(true)
     try {
-      // Pede permissão
       const perm = await Notification.requestPermission()
       setPermission(perm)
       if (perm !== 'granted') { setLoading(false); return }
 
-      // Regista o service worker de push
       const reg = await navigator.serviceWorker.register('/sw-push.js', { scope: '/' })
       await navigator.serviceWorker.ready
 
-      // Subscreve o push manager
       const sub = await reg.pushManager.subscribe({
         userVisibleOnly:      true,
         applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
       })
 
-      const json   = sub.toJSON()
-      const keys   = json.keys ?? {}
+      const json = sub.toJSON()
+      const keys = json.keys ?? {}
 
-      // Guarda no Supabase
       const { error } = await supabase.from('push_subscriptions').upsert({
         user_id:    user.id,
         house_id:   activeHouse.id,

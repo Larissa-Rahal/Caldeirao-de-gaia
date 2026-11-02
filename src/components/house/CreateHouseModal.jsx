@@ -18,7 +18,7 @@ export function CreateHouseModal({ open, onClose }) {
     try {
       const house = await createHouse(name.trim())
       setActiveHouse(house)
-      toast.success(`Casa "${house.name}" criada!`)
+      toast.success(`Caldeirão "${house.name}" criado! 🫧`)
       setName('')
       onClose()
     } catch (err) {
@@ -29,11 +29,11 @@ export function CreateHouseModal({ open, onClose }) {
   }
 
   return (
-    <Modal open={open} onClose={onClose} title="Nova casa">
+    <Modal open={open} onClose={onClose} title="Novo caldeirão">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Input
-          label="Nome da casa"
-          placeholder="Ex: Apartamento do Porto"
+          label="Nome do caldeirão"
+          placeholder="Ex: Caldeirão da Família Silva"
           value={name}
           onChange={e => { setName(e.target.value); setError('') }}
           error={error}

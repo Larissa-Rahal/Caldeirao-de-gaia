@@ -37,21 +37,20 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
   }
 
   async function handleShare() {
-    // Apenas url — evita que apps (WhatsApp, etc.) concatenem text+url
-    // e gerem links em formato markdown
     const shareData = {
       title: `Convite — ${activeHouse.name}`,
+      text:  `🫧 Oi! Te convido para o Caldeirão de Gaia — ${activeHouse.name}.\n\nUse o código *${activeHouse.invite_code}*`,
       url:   inviteUrl,
     }
     if (navigator.share && navigator.canShare?.(shareData)) {
       try {
         await navigator.share(shareData)
       } catch (err) {
-        if (err.name !== 'AbortError') toast.error('Erro ao partilhar.')
+        if (err.name !== 'AbortError') toast.error('Erro ao compartilhar.')
       }
     } else {
-      await copyToClipboard(inviteUrl)
-      toast.success('Link copiado para a área de transferência!')
+      await copyToClipboard(`🫧 ${activeHouse.name} — Caldeirão de Gaia\nCódigo: ${activeHouse.invite_code}\n${inviteUrl}`)
+      toast.success('Convite copiado!')
     }
   }
 
@@ -104,7 +103,7 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
   }
 
   async function handleDeleteCategory(cat) {
-    if (!confirm(`Eliminar categoria "${cat.name}"? Os itens ficarão sem categoria.`)) return
+    if (!confirm(`Excluir categoria "${cat.name}"? Os itens ficarão sem categoria.`)) return
     if (!deleteCategory) return
     try {
       await deleteCategory(cat.id)
@@ -122,8 +121,7 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
   ]
 
   return (
-    <Modal open={open} onClose={onClose} title={`Definições · ${activeHouse.name}`}>
-      {/* Tabs — scroll horizontal se necessário */}
+    <Modal open={open} onClose={onClose} title={`Configurações · ${activeHouse.name}`}>
       <div className="flex gap-1 overflow-x-auto scrollbar-hide bg-gray-100 rounded-xl p-1 mb-5 -mx-1">
         {TABS.map(t => (
           <button
@@ -138,11 +136,8 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
         ))}
       </div>
 
-      {/* ── Convite ── */}
       {tab === 'invite' && (
         <div className="flex flex-col gap-4">
-
-          {/* Código em destaque */}
           <div className="bg-primary-50 border border-primary-100 rounded-2xl p-5 text-center">
             <p className="text-xs text-primary-500 font-medium mb-2 uppercase tracking-wider">
               Código de convite
@@ -153,21 +148,14 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
             <p className="text-xs text-gray-400 break-all">{inviteUrl}</p>
           </div>
 
-          {/* Botão principal — Partilhar */}
           <Button onClick={handleShare} size="lg" className="w-full gap-2">
             <Share2 size={18} />
-            Partilhar convite
+            Compartilhar convite
           </Button>
 
-          {/* Ações secundárias */}
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="secondary" onClick={handleCopyCode} className="gap-2 text-sm">
-              <Copy size={14} /> Copiar código
-            </Button>
-            <Button variant="secondary" onClick={handleCopyLink} className="gap-2 text-sm">
-              <Link size={14} /> Copiar link
-            </Button>
-          </div>
+          <Button variant="secondary" onClick={handleCopyCode} className="w-full gap-2">
+            <Copy size={14} /> Copiar código
+          </Button>
 
           {isOwner && (
             <button
@@ -181,25 +169,24 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
           {isOwner && (
             <form onSubmit={handleRename} className="border-t border-gray-100 pt-4 flex flex-col gap-3">
               <Input
-                label="Renomear casa"
+                label="Renomear caldeirão"
                 placeholder={activeHouse.name}
                 value={newName}
                 onChange={e => setNewName(e.target.value)}
                 maxLength={60}
               />
               <Button type="submit" variant="secondary" loading={renaming} disabled={!newName.trim()}>
-                Guardar nome
+                Salvar nome
               </Button>
             </form>
           )}
         </div>
       )}
 
-      {/* ── Membros ── */}
       {tab === 'members' && (
         <div className="flex flex-col gap-2">
           {members.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-6">Sem membros ainda.</p>
+            <p className="text-sm text-gray-400 text-center py-6">Nenhum membro ainda.</p>
           )}
           {members.map(member => {
             const isMe          = member.user_id === user?.id
@@ -211,7 +198,7 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
                     {profile?.full_name ?? profile?.email}
-                    {isMe && <span className="ml-1 text-xs text-gray-400">(tu)</span>}
+                    {isMe && <span className="ml-1 text-xs text-gray-400">(você)</span>}
                   </p>
                   <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
                 </div>
@@ -231,7 +218,6 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
         </div>
       )}
 
-      {/* ── Categorias ── */}
       {tab === 'categories' && (
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
@@ -243,7 +229,7 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
                   <button
                     onClick={() => handleDeleteCategory(cat)}
                     className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition"
-                    aria-label={`Eliminar categoria ${cat.name}`}
+                    aria-label={`Excluir categoria ${cat.name}`}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -273,7 +259,7 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
           </form>
         </div>
       )}
-      {/* ── Histórico ── */}
+
       {tab === 'log' && (
         <div className="max-h-[60vh] overflow-y-auto -mx-5 px-5">
           <ActivityLog />

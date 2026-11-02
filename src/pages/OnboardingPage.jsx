@@ -21,11 +21,11 @@ export function OnboardingPage() {
 
   async function handleCreate(e) {
     e.preventDefault()
-    if (!name.trim()) { setError('Da um nome ao teu caldeirão.'); return }
+    if (!name.trim()) { setError('Dê um nome ao seu caldeirão.'); return }
     setLoading(true)
     try {
       await createHouse(name.trim())
-      toast.success(`Caldeirão "${name.trim()}" criado!`)
+      toast.success(`Caldeirão "${name.trim()}" criado! 🫧`)
     } catch (err) {
       toast.error(err.message)
     } finally {
@@ -40,7 +40,7 @@ export function OnboardingPage() {
     try {
       const res = await joinHouse(code.trim())
       clearInviteFromUrl()
-      toast.success(res.already_member ? 'Já és membro deste caldeirão!' : 'Adicionado ao caldeirão com sucesso!')
+      toast.success(res.already_member ? 'Você já é membro deste caldeirão!' : 'Adicionado ao caldeirão com sucesso! ✨')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -54,10 +54,9 @@ export function OnboardingPage() {
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">🫧</div>
           <h1 className="text-xl font-bold text-gray-900">Bem-vindo ao Caldeirão de Gaia!</h1>
-          <p className="text-sm text-gray-500 mt-1">Começa por criar ou juntar-te a um caldeirão.</p>
+          <p className="text-sm text-gray-500 mt-1">Crie ou entre em um caldeirão para começar.</p>
         </div>
 
-        {/* Tabs */}
         <div className="flex rounded-xl bg-gray-100 p-1 mb-6">
           <button
             onClick={() => { setTab('create'); setError('') }}

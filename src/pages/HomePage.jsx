@@ -40,23 +40,22 @@ export function HomePage() {
     localStorage.setItem(VIEW_KEY, next)
   }
 
-  // Filtragem combinada
   const filtered = useMemo(() => {
     return items.filter(item => {
-      const matchSearch   = item.name.toLowerCase().includes(search.toLowerCase())
+      const name          = item.product?.name ?? ''
+      const matchSearch   = name.toLowerCase().includes(search.toLowerCase())
       const matchStatus   = statusFilter === 'all' || item.status === statusFilter
       const matchCategory = categoryFilter === 'all' || item.category_id === categoryFilter
       return matchSearch && matchStatus && matchCategory
     })
   }, [items, search, statusFilter, categoryFilter])
 
-  // Agrupamento por categoria
   const grouped = useMemo(() => {
     const map = {}
     filtered.forEach(item => {
       const key   = item.category_id ?? '__none__'
-      const label = item.categories
-        ? `${item.categories.emoji} ${item.categories.name}`
+      const label = item.category
+        ? `${item.category.emoji} ${item.category.name}`
         : '📦 Sem categoria'
       if (!map[key]) map[key] = { label, items: [] }
       map[key].items.push(item)
@@ -68,7 +67,6 @@ export function HomePage() {
     })
   }, [filtered, categories])
 
-  // Contagens por status
   const counts = useMemo(() => ({
     all:          items.length,
     in_stock:     items.filter(i => i.status === 'in_stock').length,
@@ -80,12 +78,12 @@ export function HomePage() {
 
   async function handleCycleStatus(itemId, currentStatus) {
     try { await cycleStatus(itemId, currentStatus) }
-    catch { toast.error('Erro ao atualizar estado.') }
+    catch { toast.error('Erro ao atualizar status.') }
   }
 
   async function handleSetStatus(itemId, status) {
     try { await setStatus(itemId, status) }
-    catch { toast.error('Erro ao atualizar estado.') }
+    catch { toast.error('Erro ao atualizar status.') }
   }
 
   async function handleAddItem(data) {
@@ -96,20 +94,22 @@ export function HomePage() {
   async function handleEditItem(data) {
     await updateItem(editItem.id, {
       name:        data.name,
-      category_id: data.categoryId,
-      qty_value:   data.quantity?.value ?? null,
-      qty_unit:    data.quantity?.unit  ?? null,
+      brand:       data.brand,
+      barcode:     data.barcode,
+      defaultUnit: data.defaultUnit,
+      categoryId:  data.categoryId,
+      quantity:    data.quantity,
       notes:       data.notes,
-      image_url:   data.imageUrl,
+      imageUrl:    data.imageUrl,
     })
     toast.success('Item atualizado!')
     setEditItem(null)
   }
 
   async function handleDeleteItem(itemId) {
-    if (!confirm('Eliminar este item?')) return
-    try { await deleteItem(itemId); toast.success('Item eliminado.') }
-    catch { toast.error('Erro ao eliminar.') }
+    if (!confirm('Excluir este item?')) return
+    try { await deleteItem(itemId); toast.success('Item excluído.') }
+    catch { toast.error('Erro ao excluir.') }
   }
 
   return (
@@ -122,13 +122,12 @@ export function HomePage() {
 
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 pb-24">
 
-        {/* ── Barra de pesquisa + toggle de vista ── */}
         <div className="flex gap-2 mb-4">
           <div className="relative flex-1">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
             <input
               type="search"
-              placeholder="Pesquisar itens..."
+              placeholder="Buscar itens..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none
@@ -136,17 +135,15 @@ export function HomePage() {
             />
           </div>
 
-          {/* Toggle Grid / Lista */}
           <button
             onClick={toggleView}
-            title={viewMode === 'grid' ? 'Mudar para lista' : 'Mudar para grelha'}
-            aria-label={viewMode === 'grid' ? 'Vista em lista' : 'Vista em grelha'}
+            title={viewMode === 'grid' ? 'Mudar para lista' : 'Mudar para grade'}
+            aria-label={viewMode === 'grid' ? 'Vista em lista' : 'Vista em grade'}
             className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition flex-shrink-0"
           >
             {viewMode === 'grid' ? <List size={18} /> : <LayoutGrid size={18} />}
           </button>
 
-          {/* Botão Modo Mercado — com badge se há itens */}
           <button
             onClick={() => setMarketOpen(true)}
             title="Modo Mercado"
@@ -167,7 +164,6 @@ export function HomePage() {
           </button>
         </div>
 
-        {/* ── Filtros de status ── */}
         <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto scrollbar-hide mb-3">
           <div className="flex gap-2 pb-1 w-max min-w-full">
             {STATUS_FILTERS.map(s => {
@@ -200,7 +196,6 @@ export function HomePage() {
           </div>
         </div>
 
-        {/* ── Filtros de categoria ── */}
         {categories.length > 0 && (
           <div className="-mx-4 sm:-mx-6 px-4 sm:px-6 overflow-x-auto scrollbar-hide mb-5">
             <div className="flex gap-2 pb-1 w-max min-w-full">
@@ -233,11 +228,10 @@ export function HomePage() {
           </div>
         )}
 
-        {/* ── Conteúdo principal ── */}
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
             <RefreshCw size={24} className="animate-spin" />
-            <p className="text-sm">A carregar itens...</p>
+            <p className="text-sm">Carregando itens...</p>
           </div>
 
         ) : filtered.length === 0 ? (
@@ -245,7 +239,7 @@ export function HomePage() {
             <span className="text-5xl">🫧</span>
             <p className="text-sm">
               {items.length === 0
-                ? 'O caldeirão está vazio. Adiciona o primeiro ingrediente!'
+                ? 'O caldeirão está vazio. Adicione o primeiro ingrediente!'
                 : 'Nenhum item corresponde aos filtros.'}
             </p>
           </div>
@@ -264,7 +258,7 @@ export function HomePage() {
                   </span>
                 </h2>
 
-                  {viewMode === 'grid' ? (
+                {viewMode === 'grid' ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                     {group.items.map(item => (
                       <ItemCard
@@ -330,14 +324,8 @@ export function HomePage() {
         initialData={editItem}
         categories={categories}
       />
-      <CreateHouseModal
-        open={createHouseOpen}
-        onClose={() => setCreateHouseOpen(false)}
-      />
-      <JoinHouseModal
-        open={joinHouseOpen}
-        onClose={() => setJoinHouseOpen(false)}
-      />
+      <CreateHouseModal open={createHouseOpen} onClose={() => setCreateHouseOpen(false)} />
+      <JoinHouseModal   open={joinHouseOpen}   onClose={() => setJoinHouseOpen(false)} />
       <SettingsModal
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}

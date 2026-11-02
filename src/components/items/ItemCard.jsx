@@ -3,7 +3,6 @@ import { MoreVertical, Pencil, Trash2, ChevronRight, ExternalLink } from 'lucide
 import { STATUS_CONFIG, STATUS_CYCLE, getCategoryPlaceholder } from '@/lib/defaults'
 import { timeAgo, cn } from '@/lib/utils'
 
-// Unidades que suportam +/- (contáveis)
 const UNIT_TYPES = ['unid', 'cx', 'pct', 'par']
 
 export function ItemCard({
@@ -11,20 +10,20 @@ export function ItemCard({
   onSetStatus, onAdjustQty, onUpdateQtyValue,
   viewMode = 'grid'
 }) {
-  const [menuOpen,    setMenuOpen]    = useState(false)
-  const [editingQty,  setEditingQty]  = useState(false)
-  const [qtyDraft,    setQtyDraft]    = useState('')
+  const [menuOpen,   setMenuOpen]   = useState(false)
+  const [editingQty, setEditingQty] = useState(false)
+  const [qtyDraft,   setQtyDraft]   = useState('')
   const qtyInputRef = useRef(null)
 
+  const productName = item.product?.name ?? item.name ?? '' // fallback de segurança
   const cfg         = STATUS_CONFIG[item.status]
   const nextCfg     = STATUS_CONFIG[STATUS_CYCLE[item.status]]
-  const updaterName = item.profiles?.full_name ?? 'Alguém'
-  const placeholder = getCategoryPlaceholder(item.categories?.name ?? '', item.categories?.emoji ?? '📦')
+  const updaterName = item.updater?.full_name ?? 'Alguém'
+  const placeholder = getCategoryPlaceholder(item.category?.name ?? '', item.category?.emoji ?? '📦')
 
-  // Tipo de quantidade
-  const hasQty    = item.qty_value != null
-  const isUnit    = hasQty && UNIT_TYPES.includes(item.qty_unit)
-  const isWeight  = hasQty && !isUnit
+  const hasQty     = item.qty_value != null
+  const isUnit     = hasQty && UNIT_TYPES.includes(item.qty_unit)
+  const isWeight   = hasQty && !isUnit
   const qtyDisplay = hasQty
     ? `${item.qty_value}${item.qty_unit ? ' ' + item.qty_unit : ''}`
     : null
@@ -36,16 +35,14 @@ export function ItemCard({
 
   function handleGoogleShopping(e) {
     e.stopPropagation()
-    window.open(`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(item.name)}&hl=pt`, '_blank', 'noopener')
+    window.open(`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(productName)}&hl=pt`, '_blank', 'noopener')
   }
 
-  // +/- para unitários
   function handleAdjust(delta, e) {
     e.stopPropagation()
     onAdjustQty?.(item.id, delta)
   }
 
-  // Iniciar edição inline de peso/volume
   function handleQtyClick(e) {
     e.stopPropagation()
     if (!isWeight) return
@@ -67,7 +64,6 @@ export function ItemCard({
     if (e.key === 'Escape') { setEditingQty(false) }
   }
 
-  // ── Componente de quantidade reutilizável ──────────────────
   function QuantityControl({ size = 'sm' }) {
     if (!hasQty) return null
     const isSmall = size === 'sm'
@@ -138,7 +134,6 @@ export function ItemCard({
     return null
   }
 
-  // ── Modo compacto ──────────────────────────────────────────
   if (viewMode === 'compact') {
     return (
       <div className={cn(
@@ -146,32 +141,27 @@ export function ItemCard({
         cfg.border
       )}>
         <div className="w-9 h-9 rounded-lg overflow-hidden bg-gray-50 flex-shrink-0 border border-gray-100">
-          <img src={item.image_url || placeholder} alt={item.name}
+          <img src={item.image_url || item.product?.image_url || placeholder} alt={productName}
             className="w-full h-full object-contain p-0.5" />
         </div>
 
         <div className="flex-1 min-w-0">
           <p className={cn('text-sm font-medium text-gray-900 truncate',
             item.status === 'out_of_stock' && 'line-through text-gray-400')}>
-            {item.name}
+            {productName}
           </p>
-          {item.categories && (
-            <p className="text-xs text-gray-400">{item.categories.emoji} {item.categories.name}</p>
+          {item.category && (
+            <p className="text-xs text-gray-400">{item.category.emoji} {item.category.name}</p>
           )}
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          {/* Controlo de quantidade */}
           <QuantityControl size="sm" />
-
-          {/* Toggle status */}
           <button onClick={handleStatusClick}
             className={cn('flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold border transition-all',
               cfg.bg, cfg.text, cfg.border)}>
             {cfg.label}
           </button>
-
-          {/* Menu */}
           <div className="relative">
             <button onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
               className="w-7 h-7 flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition">
@@ -184,30 +174,27 @@ export function ItemCard({
     )
   }
 
-  // ── Modo grid ──────────────────────────────────────────────
   return (
     <div className={cn(
       'relative flex flex-col rounded-2xl border bg-white transition-all duration-150 hover:shadow-md',
       cfg.border
     )}>
-      {/* Imagem */}
       <div className="w-full rounded-t-2xl overflow-hidden bg-gray-50 border-b border-gray-100" style={{ height: '140px' }}>
         <img
-          src={item.image_url || placeholder}
-          alt={item.name}
+          src={item.image_url || item.product?.image_url || placeholder}
+          alt={productName}
           className="w-full h-full object-contain p-3"
           onError={e => { e.target.src = placeholder }}
         />
       </div>
 
       <div className="flex flex-col gap-2.5 p-3.5">
-        {/* Nome + menu */}
         <div className="flex items-start gap-2">
           <span className={cn('mt-1.5 w-2.5 h-2.5 rounded-full flex-shrink-0', cfg.dot)} />
           <div className="flex-1 min-w-0">
             <p className={cn('text-sm font-semibold text-gray-900 leading-snug',
               item.status === 'out_of_stock' && 'line-through text-gray-400')}>
-              {item.name}
+              {productName}
             </p>
             {item.notes && <p className="text-xs text-gray-400 truncate mt-0.5">{item.notes}</p>}
           </div>
@@ -220,18 +207,14 @@ export function ItemCard({
           </div>
         </div>
 
-        {/* Linha inferior: info + quantidade + status */}
         <div className="flex items-center justify-between gap-2">
           <p className="text-xs text-gray-400 truncate leading-tight">
-            {item.categories ? `${item.categories.emoji} ${item.categories.name} · ` : ''}
+            {item.category ? `${item.category.emoji} ${item.category.name} · ` : ''}
             {updaterName} · {timeAgo(item.updated_at)}
           </p>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            {/* Controlo de quantidade inteligente */}
             <QuantityControl size="sm" />
-
-            {/* Toggle status */}
             <button onClick={handleStatusClick}
               className={cn(
                 'flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold',

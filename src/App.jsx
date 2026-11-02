@@ -32,7 +32,7 @@ function AppContent() {
       <div className="min-h-dvh flex items-center justify-center bg-primary-600">
         <div className="flex flex-col items-center gap-3">
           <div className="text-5xl animate-bounce">🫧</div>
-          <div className="text-white/70 text-sm">A carregar...</div>
+          <div className="text-white/70 text-sm">Carregando...</div>
         </div>
       </div>
     )

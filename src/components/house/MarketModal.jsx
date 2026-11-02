@@ -22,10 +22,9 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
     items
       .filter(i => i.status === 'running_low' || i.status === 'out_of_stock')
       .sort((a, b) => {
-        // Em Falta primeiro
         if (a.status === 'out_of_stock' && b.status !== 'out_of_stock') return -1
         if (b.status === 'out_of_stock' && a.status !== 'out_of_stock') return  1
-        return a.name.localeCompare(b.name)
+        return (a.product?.name ?? '').localeCompare(b.product?.name ?? '')
       }),
     [items]
   )
@@ -35,7 +34,7 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
     const map = {}
     needed.forEach(item => {
       const key   = item.category_id ?? '__none__'
-      const label = item.categories ? `${item.categories.emoji} ${item.categories.name}` : '📦 Sem categoria'
+      const label = item.category ? `${item.category.emoji} ${item.category.name}` : '📦 Sem categoria'
       if (!map[key]) map[key] = { label, items: [] }
       map[key].items.push(item)
     })
@@ -74,7 +73,7 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
         const qty = i.qty_value != null
           ? ` (${i.qty_value}${i.qty_unit ? ' ' + i.qty_unit : ''})`
           : ''
-        return `  ${checked.has(i.id) ? '✅' : '☐'} ${i.name}${qty}`
+        return `  ${checked.has(i.id) ? '✅' : '☐'} ${i.product?.name ?? ''}${qty}`
       })
     ])
     const text = `🛒 Lista de Compras — Caldeirão de Gaia\n${lines.join('\n')}`
@@ -131,7 +130,7 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
                   {group.items.map(item => {
                     const isChecked = checked.has(item.id)
                     const placeholder = getCategoryPlaceholder(
-                      item.categories?.name ?? '', item.categories?.emoji ?? '📦'
+                      item.category?.name ?? '', item.category?.emoji ?? '📦'
                     )
                     return (
                       <button
@@ -156,14 +155,14 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
 
                         {/* Imagem */}
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-gray-100 flex-shrink-0">
-                          <img src={item.image_url || placeholder} alt={item.name}
+                          <img src={item.image_url || item.product?.image_url || placeholder} alt={item.product?.name ?? ''}
                             className="w-full h-full object-contain p-0.5" />
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <p className={cn('text-sm font-medium', isChecked && 'line-through text-gray-400')}>
-                            {item.name}
+                            {item.product?.name ?? ''}
                           </p>
                           {item.qty_value != null && (
                             <p className="text-xs text-gray-400">

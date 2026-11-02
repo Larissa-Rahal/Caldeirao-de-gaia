@@ -13,11 +13,8 @@ export async function searchProductImages(query, limit = 12) {
 
   const q = query.trim()
 
-  // Tenta pesquisa em português primeiro, depois global
-  const results = await fetchOFF(q, 'pt', limit)
+  return fetchOFF(q, 'pt', limit)
     .then(r => r.length >= 3 ? r : fetchOFF(q, null, limit))
-
-  return results
 }
 
 async function fetchOFF(query, lang, limit) {
@@ -30,8 +27,7 @@ async function fetchOFF(query, lang, limit) {
     fields:        'product_name,image_front_small_url,brands,lang',
   })
 
-  // lc=pt restringe a produtos rotulados em português
-  if (lang) params.set('lc', lang)
+  if (lang) params.set('lc', lang) // lc=pt restringe a produtos rotulados em português
 
   const url = `https://world.openfoodfacts.org/cgi/search.pl?${params}`
 

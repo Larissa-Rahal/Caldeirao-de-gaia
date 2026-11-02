@@ -8,7 +8,6 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  // Carrega o profile do utilizador autenticado
   async function fetchProfile(userId) {
     const { data } = await supabase
       .from('profiles')
@@ -19,14 +18,12 @@ export function AuthProvider({ children }) {
   }
 
   useEffect(() => {
-    // Sessão inicial
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
       if (session?.user) fetchProfile(session.user.id)
       setLoading(false)
     })
 
-    // Ouvir mudanças de sessão
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {
         setUser(session?.user ?? null)

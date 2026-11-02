@@ -26,7 +26,6 @@ export function Modal({ open, onClose, title, children, className }) {
       aria-modal="true"
       aria-labelledby="modal-title"
     >
-      {/* Overlay */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
         onClick={onClose}
@@ -45,7 +44,6 @@ export function Modal({ open, onClose, title, children, className }) {
           <div className="w-10 h-1 rounded-full bg-gray-300" aria-hidden="true" />
         </div>
 
-        {/* Header */}
         {title && (
           <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
             <h2 id="modal-title" className="text-base font-semibold text-gray-900">{title}</h2>

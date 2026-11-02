@@ -5,16 +5,15 @@ import { DEFAULT_CATEGORIES } from '@/lib/defaults'
 
 const HouseContext = createContext(null)
 
-const ACTIVE_HOUSE_KEY = 'caldeir�o_active_house'
+const ACTIVE_HOUSE_KEY = 'caldeirão_active_house'
 
 export function HouseProvider({ children }) {
   const { user } = useAuth()
-  const [houses,      setHouses]      = useState([])
+  const [houses,      setHouses]           = useState([])
   const [activeHouse, setActiveHouseState] = useState(null)
-  const [members,     setMembers]     = useState([])
-  const [loading,     setLoading]     = useState(true)
+  const [members,     setMembers]          = useState([])
+  const [loading,     setLoading]          = useState(true)
 
-  // Carrega todas as casas do utilizador
   const fetchHouses = useCallback(async () => {
     if (!user) { setHouses([]); setLoading(false); return }
 
@@ -38,7 +37,6 @@ export function HouseProvider({ children }) {
 
   useEffect(() => { fetchHouses() }, [fetchHouses])
 
-  // Carrega membros da casa activa
   useEffect(() => {
     if (!activeHouse) { setMembers([]); return }
     supabase
@@ -54,8 +52,8 @@ export function HouseProvider({ children }) {
   }
 
   async function ensureProfile() {
-    // Garante que o perfil existe antes de criar a casa
-    // (pode não existir se o email ainda não foi confirmado quando o trigger disparou)
+    // Garante que o perfil existe antes de criar a casa.
+    // Pode não existir se o e-mail ainda não foi confirmado quando o trigger disparou.
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
@@ -72,7 +70,6 @@ export function HouseProvider({ children }) {
   }
 
   async function createHouse(name) {
-    // Garante perfil antes de criar (resolve race condition com trigger)
     await ensureProfile()
 
     const { data, error } = await supabase
@@ -82,12 +79,10 @@ export function HouseProvider({ children }) {
       .single()
     if (error) throw error
 
-    // Criar categorias padrão
     const cats = DEFAULT_CATEGORIES.map(c => ({ ...c, house_id: data.id }))
     await supabase.from('categories').insert(cats)
 
     await fetchHouses()
-    // Seleccionar a nova casa
     setActiveHouseState(prev => prev ?? data)
     localStorage.setItem(ACTIVE_HOUSE_KEY, data.id)
     return data
