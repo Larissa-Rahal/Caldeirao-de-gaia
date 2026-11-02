@@ -50,6 +50,7 @@ export const STATUS_CYCLE = {
 
 /** Gera a URL de convite com base no código */
 export function buildInviteUrl(code) {
-  const base = import.meta.env.VITE_APP_URL || window.location.origin
-  return `${base}/?invite=${code}`
+  // Usa sempre o domínio actual da app — funciona em localhost, Vercel e qualquer outro host
+  const origin = typeof window !== 'undefined' ? window.location.origin : ''
+  return `${origin}/?invite=${code}`
 }

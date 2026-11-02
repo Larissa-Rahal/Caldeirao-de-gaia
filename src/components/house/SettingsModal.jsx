@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Copy, RefreshCw, Link, Trash2, UserMinus, Crown } from 'lucide-react'
+import { Copy, RefreshCw, Link, Trash2, UserMinus, Crown, Share2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
@@ -10,8 +10,6 @@ import { copyToClipboard } from '@/lib/utils'
 import { buildInviteUrl } from '@/lib/defaults'
 import toast from 'react-hot-toast'
 
-// categories, addCategory, deleteCategory chegam como props do HomePage
-// evita criar um segundo canal Realtime desnecessário
 export function SettingsModal({ open, onClose, categories = [], addCategory, deleteCategory }) {
   const { activeHouse, members, updateHouseName, regenerateInviteCode, removeMember } = useHouse()
   const { user } = useAuth()
@@ -35,6 +33,25 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
   async function handleCopyLink() {
     await copyToClipboard(inviteUrl)
     toast.success('Link copiado!')
+  }
+
+  async function handleShare() {
+    // Apenas url — evita que apps (WhatsApp, etc.) concatenem text+url
+    // e gerem links em formato markdown
+    const shareData = {
+      title: `Convite — ${activeHouse.name}`,
+      url:   inviteUrl,
+    }
+    if (navigator.share && navigator.canShare?.(shareData)) {
+      try {
+        await navigator.share(shareData)
+      } catch (err) {
+        if (err.name !== 'AbortError') toast.error('Erro ao partilhar.')
+      }
+    } else {
+      await copyToClipboard(inviteUrl)
+      toast.success('Link copiado para a área de transferência!')
+    }
   }
 
   async function handleRegenerateCode() {
@@ -122,26 +139,41 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
       {/* ── Convite ── */}
       {tab === 'invite' && (
         <div className="flex flex-col gap-4">
-          <div className="bg-gray-50 rounded-2xl p-5 text-center">
-            <p className="text-xs text-gray-500 mb-2">Código de convite</p>
-            <p className="text-3xl font-mono font-bold tracking-widest text-primary-700">
+
+          {/* Código em destaque */}
+          <div className="bg-primary-50 border border-primary-100 rounded-2xl p-5 text-center">
+            <p className="text-xs text-primary-500 font-medium mb-2 uppercase tracking-wider">
+              Código de convite
+            </p>
+            <p className="text-4xl font-mono font-bold tracking-widest text-primary-700 mb-3">
               {activeHouse.invite_code}
             </p>
+            <p className="text-xs text-gray-400 break-all">{inviteUrl}</p>
           </div>
 
+          {/* Botão principal — Partilhar */}
+          <Button onClick={handleShare} size="lg" className="w-full gap-2">
+            <Share2 size={18} />
+            Partilhar convite
+          </Button>
+
+          {/* Ações secundárias */}
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="secondary" onClick={handleCopyCode} className="gap-2">
+            <Button variant="secondary" onClick={handleCopyCode} className="gap-2 text-sm">
               <Copy size={14} /> Copiar código
             </Button>
-            <Button variant="secondary" onClick={handleCopyLink} className="gap-2">
+            <Button variant="secondary" onClick={handleCopyLink} className="gap-2 text-sm">
               <Link size={14} /> Copiar link
             </Button>
           </div>
 
           {isOwner && (
-            <Button variant="ghost" onClick={handleRegenerateCode} className="gap-2 text-sm text-gray-500">
-              <RefreshCw size={14} /> Gerar novo código
-            </Button>
+            <button
+              onClick={handleRegenerateCode}
+              className="text-xs text-gray-400 hover:text-gray-600 transition text-center py-1 flex items-center justify-center gap-1"
+            >
+              <RefreshCw size={12} /> Gerar novo código
+            </button>
           )}
 
           {isOwner && (
