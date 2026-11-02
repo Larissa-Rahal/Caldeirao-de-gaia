@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LogOut, Sun, Moon, UserCog, ShoppingCart } from 'lucide-react'
+import { LogOut, Sun, Moon, UserCog, ShoppingCart, ReceiptText } from 'lucide-react'
 import { HouseSwitcher } from './HouseSwitcher'
 import { Avatar } from '@/components/ui/Avatar'
 import { PushNotificationToggle } from '@/components/ui/PushNotificationToggle'
@@ -13,6 +13,7 @@ export function Header({
   onJoinHouse,
   onOpenSettings,
   onOpenMarket,
+  onOpenReceiptScanner,
   needsMarket = 0,
 }) {
   const { profile, signOut } = useAuth()
@@ -44,8 +45,20 @@ export function Header({
             />
           </div>
 
-          {/* Ações à direita: Modo Mercado, Tema, Perfil */}
-          <div className="flex items-center gap-2.5">
+          {/* Ações à direita: Nota Fiscal, Modo Mercado, Tema, Perfil */}
+          <div className="flex items-center gap-2 sm:gap-2.5">
+            {onOpenReceiptScanner && (
+              <button
+                onClick={onOpenReceiptScanner}
+                title="Fotografar Nota Fiscal"
+                aria-label="Fotografar ou enviar nota fiscal"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-[#C59B27]/50 bg-[#1D122E]/80 text-[#FDE68A] hover:border-[#E5B842] transition text-xs font-medium"
+              >
+                <ReceiptText size={15} className="text-[#E5B842]" />
+                <span className="hidden sm:inline font-serif tracking-wide">Nota Fiscal</span>
+              </button>
+            )}
+
             {onOpenMarket && (
               <button
                 onClick={onOpenMarket}

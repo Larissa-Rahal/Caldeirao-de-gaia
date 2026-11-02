@@ -352,6 +352,38 @@ export function useItems() {
     )
   }
 
+  /**
+   * Soma uma quantidade comprada (ex.: via leitura de Nota Fiscal) ao item existente
+   * e marca o status como 'in_stock'.
+   */
+  function restockItem(itemId, addedQty, unit) {
+    const item = items.find(i => i.id === itemId)
+    if (!item) return Promise.resolve()
+    const currentVal   = Number(item.qty_value) || 0
+    const delta        = Math.max(0, Number(addedQty) || 1)
+    const newVal       = Number((currentVal + delta).toFixed(3))
+    const resolvedUnit = item.qty_unit || unit || item.product?.default_unit || 'un'
+    return optimisticUpdate(
+      itemId,
+      {
+        qty_value:  newVal,
+        qty_unit:   resolvedUnit,
+        status:     'in_stock',
+        updated_by: user.id,
+        updated_at: new Date().toISOString(),
+      },
+      () => supabase.from('items')
+        .update({
+          qty_value:  newVal,
+          qty_unit:   resolvedUnit,
+          status:     'in_stock',
+          updated_by: user.id,
+        })
+        .eq('id', itemId)
+        .then(({ error: err }) => { if (err) throw err })
+    )
+  }
+
   async function deleteItem(itemId) {
     setItems(prev => prev.filter(i => i.id !== itemId))
     pendingRef.current.add(itemId)
@@ -370,7 +402,7 @@ export function useItems() {
   return {
     items, itemsByCategory, loading, error,
     addItem, cycleStatus, setStatus, updateItem, deleteItem,
-    adjustQty, updateQtyValue,
+    adjustQty, updateQtyValue, restockItem,
     refetch: fetchItems,
   }
 }

@@ -3,6 +3,7 @@ import { Search, RefreshCw, LayoutGrid, List, X } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { ItemCard } from '@/components/items/ItemCard'
 import { ItemFormModal } from '@/components/items/ItemFormModal'
+import { ReceiptScannerModal } from '@/components/items/ReceiptScannerModal'
 import { MarketModal } from '@/components/house/MarketModal'
 import { CauldronEmblem, StatusGem, CornerVine, AddOrbButton } from '@/components/ui/GrimoireOrnaments'
 import { useItems } from '@/hooks/useItems'
@@ -18,7 +19,7 @@ const STATUS_FILTERS = ['all', 'in_stock', 'running_low', 'out_of_stock']
 const VIEW_KEY = 'caldeirão_view'
 
 export function HomePage() {
-  const { items, loading, cycleStatus, setStatus, addItem, updateItem, deleteItem, adjustQty, updateQtyValue } = useItems()
+  const { items, loading, cycleStatus, setStatus, addItem, updateItem, deleteItem, adjustQty, updateQtyValue, restockItem } = useItems()
   const { categories, addCategory, deleteCategory } = useCategories()
 
   const [search,          setSearch]          = useState('')
@@ -32,6 +33,7 @@ export function HomePage() {
   const [joinHouseOpen,   setJoinHouseOpen]   = useState(false)
   const [settingsOpen,    setSettingsOpen]    = useState(false)
   const [marketOpen,      setMarketOpen]      = useState(false)
+  const [receiptOpen,     setReceiptOpen]     = useState(false)
 
   function toggleView() {
     const next = viewMode === 'grid' ? 'compact' : 'grid'
@@ -125,6 +127,7 @@ export function HomePage() {
         onJoinHouse={() => setJoinHouseOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenMarket={() => setMarketOpen(true)}
+        onOpenReceiptScanner={() => setReceiptOpen(true)}
         needsMarket={needsMarket}
       />
 
@@ -409,6 +412,14 @@ export function HomePage() {
         items={items}
         categories={categories}
         onSetStatus={handleSetStatus}
+      />
+      <ReceiptScannerModal
+        open={receiptOpen}
+        onClose={() => setReceiptOpen(false)}
+        items={items}
+        categories={categories}
+        onRestockItem={restockItem}
+        onAddItem={addItem}
       />
     </div>
   )

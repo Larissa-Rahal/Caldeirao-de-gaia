@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { MoreVertical, Pencil, Trash2, ExternalLink } from 'lucide-react'
+import { MoreVertical, Trash2, ExternalLink } from 'lucide-react'
 import { STATUS_CONFIG, STATUS_CYCLE, getCategoryPlaceholder } from '@/lib/defaults'
 import { CardCornerLeaves, StatusGem } from '@/components/ui/GrimoireOrnaments'
 import { timeAgo, cn } from '@/lib/utils'
@@ -96,7 +96,11 @@ export function ItemCard({
         'grimoire-card relative flex items-center gap-3 px-3.5 py-2.5 rounded-xl border-2 transition-all',
         cardAuraClasses[item.status]
       )}>
-        <div className="grimoire-thumb w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-[#B88928]/40">
+        <div
+          onClick={() => onEdit(item)}
+          title="Clique para editar detalhes"
+          className="grimoire-thumb w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 border border-[#B88928]/40 cursor-pointer"
+        >
           <img
             src={item.image_url || item.product?.image_url || placeholder}
             alt={productName}
@@ -105,7 +109,11 @@ export function ItemCard({
           />
         </div>
 
-        <div className="flex-1 min-w-0">
+        <div
+          onClick={() => onEdit(item)}
+          title="Clique para editar detalhes"
+          className="flex-1 min-w-0 cursor-pointer"
+        >
           <p className={cn(
             'grimoire-card-title font-serif font-bold text-sm truncate',
             item.status === 'out_of_stock' && 'line-through opacity-60'
@@ -158,7 +166,6 @@ export function ItemCard({
             {menuOpen && (
               <ItemMenu
                 onClose={() => setMenuOpen(false)}
-                onEdit={() => onEdit(item)}
                 onDelete={() => onDelete(item.id)}
                 onShop={handleGoogleShopping}
               />
@@ -196,7 +203,6 @@ export function ItemCard({
         {menuOpen && (
           <ItemMenu
             onClose={() => setMenuOpen(false)}
-            onEdit={() => onEdit(item)}
             onDelete={() => onDelete(item.id)}
             onShop={handleGoogleShopping}
           />
@@ -351,17 +357,11 @@ function ParchmentScroll({
   )
 }
 
-function ItemMenu({ onClose, onEdit, onDelete, onShop }) {
+function ItemMenu({ onClose, onDelete, onShop }) {
   return (
     <>
       <div className="fixed inset-0 z-40" onClick={onClose} aria-hidden="true" />
       <div className="absolute right-0 top-full mt-1 z-50 w-44 bg-white border border-gray-100 rounded-xl shadow-xl py-1 overflow-hidden">
-        <button
-          onClick={e => { e.stopPropagation(); onClose(); onEdit() }}
-          className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
-        >
-          <Pencil size={14} /> Editar
-        </button>
         <button
           onClick={e => { e.stopPropagation(); onClose(); onShop(e) }}
           className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
