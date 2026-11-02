@@ -51,7 +51,7 @@ export function OnboardingPage() {
 
   return (
     <div className="min-h-dvh bg-gradient-to-br from-primary-600 to-primary-800 flex flex-col items-center justify-center px-4 py-10">
-      <div className="w-full max-w-sm bg-white rounded-3xl shadow-2xl p-8">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10">
         <div className="text-center mb-6">
           <div className="text-5xl mb-3">🏠</div>
           <h1 className="text-xl font-bold text-gray-900">Bem-vindo ao EstoqueCasa!</h1>

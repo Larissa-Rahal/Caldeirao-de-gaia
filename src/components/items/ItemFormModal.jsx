@@ -2,15 +2,14 @@ import { useState, useEffect } from 'react'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { useCategories } from '@/hooks/useCategories'
 
-export function ItemFormModal({ open, onClose, onSubmit, initialData }) {
-  const { categories } = useCategories()
+// categories é recebida como prop — evita criar um segundo canal Realtime
+export function ItemFormModal({ open, onClose, onSubmit, initialData, categories = [] }) {
   const isEdit = Boolean(initialData)
 
-  const [form, setForm] = useState({ name: '', categoryId: '', notes: '' })
+  const [form,    setForm]    = useState({ name: '', categoryId: '', notes: '' })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [error,   setError]   = useState('')
 
   useEffect(() => {
     if (open) {

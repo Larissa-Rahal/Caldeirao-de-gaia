@@ -36,7 +36,7 @@ export function Modal({ open, onClose, title, children, className }) {
       {/* Painel — bottom sheet em mobile, centrado em desktop */}
       <div className={cn(
         'relative w-full bg-white rounded-t-2xl sm:rounded-2xl shadow-xl',
-        'sm:max-w-md mx-0 sm:mx-4',
+        'sm:max-w-lg mx-0 sm:mx-4',
         'max-h-[92dvh] overflow-y-auto',
         className
       )}>

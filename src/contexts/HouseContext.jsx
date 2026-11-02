@@ -4,6 +4,7 @@ import { useAuth } from './AuthContext'
 import { DEFAULT_CATEGORIES } from '@/lib/defaults'
 
 const HouseContext = createContext(null)
+export { HouseContext }
 
 const ACTIVE_HOUSE_KEY = 'estoquecasa_active_house'
 
@@ -53,7 +54,28 @@ export function HouseProvider({ children }) {
     if (house) localStorage.setItem(ACTIVE_HOUSE_KEY, house.id)
   }
 
+  async function ensureProfile() {
+    // Garante que o perfil existe antes de criar a casa
+    // (pode não existir se o email ainda não foi confirmado quando o trigger disparou)
+    const { data: existing } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user.id)
+      .single()
+
+    if (!existing) {
+      await supabase.from('profiles').insert({
+        id:        user.id,
+        email:     user.email,
+        full_name: user.user_metadata?.full_name ?? user.email.split('@')[0],
+      })
+    }
+  }
+
   async function createHouse(name) {
+    // Garante perfil antes de criar (resolve race condition com trigger)
+    await ensureProfile()
+
     const { data, error } = await supabase
       .from('houses')
       .insert({ name, owner_id: user.id })
@@ -73,6 +95,7 @@ export function HouseProvider({ children }) {
   }
 
   async function joinHouse(inviteCode) {
+    await ensureProfile()
     const { data, error } = await supabase.rpc('join_house', { p_invite_code: inviteCode })
     if (error) throw error
     if (data?.error) throw new Error(data.error)

@@ -6,24 +6,25 @@ import { Button } from '@/components/ui/Button'
 import { Avatar } from '@/components/ui/Avatar'
 import { useHouse } from '@/contexts/HouseContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { useCategories } from '@/hooks/useCategories'
 import { copyToClipboard } from '@/lib/utils'
 import { buildInviteUrl } from '@/lib/defaults'
 import toast from 'react-hot-toast'
 
-export function SettingsModal({ open, onClose }) {
+// categories, addCategory, deleteCategory chegam como props do HomePage
+// evita criar um segundo canal Realtime desnecessário
+export function SettingsModal({ open, onClose, categories = [], addCategory, deleteCategory }) {
   const { activeHouse, members, updateHouseName, regenerateInviteCode, removeMember } = useHouse()
   const { user } = useAuth()
-  const { categories, addCategory, deleteCategory } = useCategories()
-  const [tab, setTab] = useState('invite') // 'invite' | 'members' | 'categories'
-  const [newName, setNewName] = useState('')
-  const [renaming, setRenaming] = useState(false)
-  const [newCatName, setNewCatName] = useState('')
+
+  const [tab,         setTab]         = useState('invite')
+  const [newName,     setNewName]     = useState('')
+  const [renaming,    setRenaming]    = useState(false)
+  const [newCatName,  setNewCatName]  = useState('')
   const [newCatEmoji, setNewCatEmoji] = useState('📦')
 
   if (!activeHouse) return null
 
-  const isOwner = activeHouse.myRole === 'owner'
+  const isOwner   = activeHouse.myRole === 'owner'
   const inviteUrl = buildInviteUrl(activeHouse.invite_code)
 
   async function handleCopyCode() {
@@ -73,7 +74,7 @@ export function SettingsModal({ open, onClose }) {
 
   async function handleAddCategory(e) {
     e.preventDefault()
-    if (!newCatName.trim()) return
+    if (!newCatName.trim() || !addCategory) return
     try {
       await addCategory({ name: newCatName.trim(), emoji: newCatEmoji })
       setNewCatName('')
@@ -86,6 +87,7 @@ export function SettingsModal({ open, onClose }) {
 
   async function handleDeleteCategory(cat) {
     if (!confirm(`Eliminar categoria "${cat.name}"? Os itens ficarão sem categoria.`)) return
+    if (!deleteCategory) return
     try {
       await deleteCategory(cat.id)
       toast.success('Categoria eliminada.')
@@ -109,7 +111,7 @@ export function SettingsModal({ open, onClose }) {
             key={t.key}
             onClick={() => setTab(t.key)}
             className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition ${
-              tab === t.key ? 'bg-white shadow text-primary-700' : 'text-gray-500'
+              tab === t.key ? 'bg-white shadow text-primary-700' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
             {t.label}
@@ -120,8 +122,8 @@ export function SettingsModal({ open, onClose }) {
       {/* ── Convite ── */}
       {tab === 'invite' && (
         <div className="flex flex-col gap-4">
-          <div className="bg-gray-50 rounded-2xl p-4 text-center">
-            <p className="text-xs text-gray-500 mb-1">Código de convite</p>
+          <div className="bg-gray-50 rounded-2xl p-5 text-center">
+            <p className="text-xs text-gray-500 mb-2">Código de convite</p>
             <p className="text-3xl font-mono font-bold tracking-widest text-primary-700">
               {activeHouse.invite_code}
             </p>
@@ -162,10 +164,13 @@ export function SettingsModal({ open, onClose }) {
       {/* ── Membros ── */}
       {tab === 'members' && (
         <div className="flex flex-col gap-2">
+          {members.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-6">Sem membros ainda.</p>
+          )}
           {members.map(member => {
-            const isMe = member.user_id === user?.id
+            const isMe          = member.user_id === user?.id
             const isMemberOwner = member.role === 'owner'
-            const profile = member.profiles
+            const profile       = member.profiles
             return (
               <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50">
                 <Avatar name={profile?.full_name ?? profile?.email} size="sm" />
@@ -174,7 +179,7 @@ export function SettingsModal({ open, onClose }) {
                     {profile?.full_name ?? profile?.email}
                     {isMe && <span className="ml-1 text-xs text-gray-400">(tu)</span>}
                   </p>
-                  <p className="text-xs text-gray-400">{profile?.email}</p>
+                  <p className="text-xs text-gray-400 truncate">{profile?.email}</p>
                 </div>
                 {isMemberOwner && <Crown size={14} className="text-amber-500 shrink-0" />}
                 {isOwner && !isMe && !isMemberOwner && (
@@ -195,7 +200,7 @@ export function SettingsModal({ open, onClose }) {
       {/* ── Categorias ── */}
       {tab === 'categories' && (
         <div className="flex flex-col gap-3">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
             {categories.map(cat => (
               <div key={cat.id} className="flex items-center gap-2 p-2.5 rounded-xl bg-gray-50">
                 <span className="text-xl">{cat.emoji}</span>
@@ -216,7 +221,7 @@ export function SettingsModal({ open, onClose }) {
           <form onSubmit={handleAddCategory} className="border-t border-gray-100 pt-3 flex gap-2">
             <input
               type="text"
-              placeholder="Emoji"
+              placeholder="🏷️"
               value={newCatEmoji}
               onChange={e => setNewCatEmoji(e.target.value)}
               className="w-14 text-center rounded-xl border border-gray-300 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -224,15 +229,13 @@ export function SettingsModal({ open, onClose }) {
             />
             <input
               type="text"
-              placeholder="Nova categoria"
+              placeholder="Nova categoria..."
               value={newCatName}
               onChange={e => setNewCatName(e.target.value)}
               className="flex-1 rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               maxLength={40}
             />
-            <Button type="submit" size="md" disabled={!newCatName.trim()}>
-              +
-            </Button>
+            <Button type="submit" size="md" disabled={!newCatName.trim()}>+</Button>
           </form>
         </div>
       )}
