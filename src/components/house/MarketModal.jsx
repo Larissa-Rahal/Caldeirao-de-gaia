@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { ShoppingCart, Check, CheckCheck, Share2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { cn, copyToClipboard } from '@/lib/utils'
@@ -11,6 +11,11 @@ import toast from 'react-hot-toast'
  */
 export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
   const [checked, setChecked] = useState(new Set())
+
+  // Reseta os checks sempre que o modal abre
+  useEffect(() => {
+    if (open) setChecked(new Set())
+  }, [open])
 
   // Só mostra itens que precisam de reposição
   const needed = useMemo(() =>
