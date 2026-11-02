@@ -52,49 +52,63 @@ export function HouseProvider({ children }) {
   }
 
   async function ensureProfile() {
-    // Garante que o perfil existe antes de criar a casa.
-    // Pode não existir se o e-mail ainda não foi confirmado quando o trigger disparou.
     const { data: existing } = await supabase
       .from('profiles')
       .select('id')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
 
     if (!existing) {
-      await supabase.from('profiles').insert({
+      const { error } = await supabase.from('profiles').upsert({
         id:        user.id,
         email:     user.email,
-        full_name: user.user_metadata?.full_name ?? user.email.split('@')[0],
-      })
+        full_name: user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? 'Utilizador',
+      }, { onConflict: 'id' })
+      if (error) throw error
     }
   }
 
   async function createHouse(name) {
     await ensureProfile()
 
-    const { data, error } = await supabase
-      .from('houses')
-      .insert({ name, owner_id: user.id })
-      .select()
-      .single()
-    if (error) throw error
+    const houseId = crypto.randomUUID()
 
-    const cats = DEFAULT_CATEGORIES.map(c => ({ ...c, house_id: data.id }))
+    // Inserimos sem encadear .select() para que o RETURNING * não avalie
+    // a política SELECT (is_house_member STABLE) antes do commit do trigger on_house_created
+    const { error: insertError } = await supabase
+      .from('houses')
+      .insert({ id: houseId, name, owner_id: user.id })
+    if (insertError) throw insertError
+
+    const { data: houseData } = await supabase
+      .from('houses')
+      .select('*')
+      .eq('id', houseId)
+      .maybeSingle()
+
+    const created = houseData ?? { id: houseId, name, owner_id: user.id }
+
+    const cats = DEFAULT_CATEGORIES.map(c => ({ ...c, house_id: houseId }))
     await supabase.from('categories').insert(cats)
 
     await fetchHouses()
-    setActiveHouseState(prev => prev ?? data)
-    localStorage.setItem(ACTIVE_HOUSE_KEY, data.id)
-    return data
+    setActiveHouseState(prev => prev ?? { ...created, myRole: 'owner' })
+    localStorage.setItem(ACTIVE_HOUSE_KEY, houseId)
+    return created
   }
 
   async function joinHouse(inviteCode) {
     await ensureProfile()
-    const { data, error } = await supabase.rpc('join_house', { p_invite_code: inviteCode })
+    const cleanCode     = inviteCode.trim().toUpperCase()
+    const alreadyMember = houses.some(h => h.invite_code?.toUpperCase() === cleanCode)
+
+    const { data: houseId, error } = await supabase.rpc('join_house_by_code', {
+      p_invite_code: cleanCode,
+    })
     if (error) throw error
-    if (data?.error) throw new Error(data.error)
+
     await fetchHouses()
-    return data
+    return { house_id: houseId, already_member: alreadyMember }
   }
 
   async function updateHouseName(houseId, name) {

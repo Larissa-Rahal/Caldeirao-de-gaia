@@ -39,6 +39,7 @@ export function usePushNotifications() {
         .from('push_subscriptions')
         .select('id')
         .eq('user_id', user.id)
+        .eq('house_id', activeHouse.id)
         .eq('endpoint', sub.endpoint)
         .maybeSingle()
 
@@ -72,7 +73,7 @@ export function usePushNotifications() {
         p256dh:     keys.p256dh,
         auth_key:   keys.auth,
         user_agent: navigator.userAgent.slice(0, 200),
-      }, { onConflict: 'user_id,endpoint' })
+      }, { onConflict: 'user_id,house_id,endpoint' })
 
       if (error) throw error
       setSubscribed(true)

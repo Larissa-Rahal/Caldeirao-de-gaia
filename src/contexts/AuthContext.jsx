@@ -8,19 +8,36 @@ export function AuthProvider({ children }) {
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  async function fetchProfile(userId) {
+  async function fetchProfile(authUser) {
+    if (!authUser) { setProfile(null); return }
     const { data } = await supabase
       .from('profiles')
       .select('*')
-      .eq('id', userId)
-      .single()
-    setProfile(data ?? null)
+      .eq('id', authUser.id)
+      .maybeSingle()
+
+    if (data) {
+      setProfile(data)
+      return
+    }
+
+    const { data: created } = await supabase
+      .from('profiles')
+      .upsert({
+        id:        authUser.id,
+        email:     authUser.email,
+        full_name: authUser.user_metadata?.full_name ?? authUser.email?.split('@')[0] ?? 'Utilizador',
+      }, { onConflict: 'id' })
+      .select('*')
+      .maybeSingle()
+
+    setProfile(created ?? null)
   }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null)
-      if (session?.user) fetchProfile(session.user.id)
+      if (session?.user) fetchProfile(session.user)
       setLoading(false)
     })
 
@@ -28,7 +45,7 @@ export function AuthProvider({ children }) {
       (_event, session) => {
         setUser(session?.user ?? null)
         if (session?.user) {
-          fetchProfile(session.user.id)
+          fetchProfile(session.user)
         } else {
           setProfile(null)
         }

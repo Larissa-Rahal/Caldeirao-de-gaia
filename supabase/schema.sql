@@ -166,41 +166,37 @@ BEGIN
 END;
 $$;
 
--- 2.10 Entrar numa casa através de código de convite
-CREATE OR REPLACE FUNCTION public.join_house(p_invite_code text)
-RETURNS json LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+-- 2.10 Entrar numa casa através de código de convite (retorna o UUID da casa)
+CREATE OR REPLACE FUNCTION public.join_house_by_code(p_invite_code text)
+RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
-  found_house_id uuid;
-  current_user_id uuid;
+  v_house_id uuid;
+  v_user_id  uuid;
 BEGIN
-  current_user_id := auth.uid();
-
-  IF current_user_id IS NULL THEN
-    RETURN json_build_object('error', 'Não autenticado');
+  v_user_id := auth.uid();
+  IF v_user_id IS NULL THEN
+    RAISE EXCEPTION 'Não autenticado';
   END IF;
 
-  SELECT id INTO found_house_id
+  SELECT id INTO v_house_id
   FROM public.houses
   WHERE invite_code = upper(trim(p_invite_code))
   LIMIT 1;
 
-  IF found_house_id IS NULL THEN
-    RETURN json_build_object('error', 'Código de convite inválido');
-  END IF;
-
-  IF EXISTS (
-    SELECT 1 FROM public.house_members
-    WHERE house_id = found_house_id AND user_id = current_user_id
-  ) THEN
-    RETURN json_build_object('house_id', found_house_id::text, 'already_member', true);
+  IF v_house_id IS NULL THEN
+    RAISE EXCEPTION 'Código de convite inválido';
   END IF;
 
   INSERT INTO public.house_members (house_id, user_id, role)
-  VALUES (found_house_id, current_user_id, 'member');
+  VALUES (v_house_id, v_user_id, 'member')
+  ON CONFLICT (house_id, user_id) DO NOTHING;
 
-  RETURN json_build_object('house_id', found_house_id::text, 'already_member', false);
+  RETURN v_house_id;
 END;
 $$;
+
+REVOKE EXECUTE ON FUNCTION public.join_house_by_code(text) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.join_house_by_code(text) TO authenticated;
 
 -- ── 3. TABELAS ────────────────────────────────────────────────────────────────
 
@@ -369,14 +365,25 @@ ALTER TABLE public.items              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.activity_log       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 
--- 6.1 Profiles
+-- 6.1 Profiles (leitura para si mesmo ou pessoas que compartilham uma casa)
 DROP POLICY IF EXISTS "profiles_select_own"   ON public.profiles;
 DROP POLICY IF EXISTS "profiles_update_own"   ON public.profiles;
 DROP POLICY IF EXISTS "profiles_insert_own"   ON public.profiles;
 
-CREATE POLICY "profiles_select_own"  ON public.profiles FOR SELECT  USING (true);
-CREATE POLICY "profiles_insert_own"  ON public.profiles FOR INSERT  WITH CHECK (id = auth.uid());
-CREATE POLICY "profiles_update_own"  ON public.profiles FOR UPDATE  USING (id = auth.uid());
+CREATE POLICY "profiles_select_own" ON public.profiles FOR SELECT
+  USING (
+    auth.role() = 'authenticated' AND (
+      id = auth.uid() OR EXISTS (
+        SELECT 1 FROM public.house_members hm1
+        JOIN public.house_members hm2 ON hm1.house_id = hm2.house_id
+        WHERE hm1.user_id = auth.uid() AND hm2.user_id = profiles.id
+      )
+    )
+  );
+CREATE POLICY "profiles_insert_own" ON public.profiles FOR INSERT
+  WITH CHECK (id = auth.uid());
+CREATE POLICY "profiles_update_own" ON public.profiles FOR UPDATE
+  USING (id = auth.uid());
 
 -- 6.2 Houses
 DROP POLICY IF EXISTS "houses_select"  ON public.houses;
@@ -385,7 +392,7 @@ DROP POLICY IF EXISTS "houses_update"  ON public.houses;
 DROP POLICY IF EXISTS "houses_delete"  ON public.houses;
 
 CREATE POLICY "houses_select" ON public.houses FOR SELECT
-  USING (public.is_house_member(id));
+  USING (owner_id = auth.uid() OR public.is_house_member(id));
 CREATE POLICY "houses_insert" ON public.houses FOR INSERT
   WITH CHECK (owner_id = auth.uid());
 CREATE POLICY "houses_update" ON public.houses FOR UPDATE
@@ -393,7 +400,7 @@ CREATE POLICY "houses_update" ON public.houses FOR UPDATE
 CREATE POLICY "houses_delete" ON public.houses FOR DELETE
   USING (public.is_house_owner(id));
 
--- 6.3 House Members
+-- 6.3 House Members (inserção direta exige admin/owner; owner não pode ser removido)
 DROP POLICY IF EXISTS "house_members_select"  ON public.house_members;
 DROP POLICY IF EXISTS "house_members_insert"  ON public.house_members;
 DROP POLICY IF EXISTS "house_members_delete"  ON public.house_members;
@@ -401,9 +408,9 @@ DROP POLICY IF EXISTS "house_members_delete"  ON public.house_members;
 CREATE POLICY "house_members_select" ON public.house_members FOR SELECT
   USING (public.is_house_member(house_id));
 CREATE POLICY "house_members_insert" ON public.house_members FOR INSERT
-  WITH CHECK (user_id = auth.uid());
+  WITH CHECK (public.is_house_admin(house_id));
 CREATE POLICY "house_members_delete" ON public.house_members FOR DELETE
-  USING (user_id = auth.uid() OR public.is_house_admin(house_id));
+  USING (role <> 'owner' AND (user_id = auth.uid() OR public.is_house_admin(house_id)));
 
 -- 6.4 Categories
 DROP POLICY IF EXISTS "categories_select"  ON public.categories;
@@ -420,7 +427,7 @@ CREATE POLICY "categories_update" ON public.categories FOR UPDATE
 CREATE POLICY "categories_delete" ON public.categories FOR DELETE
   USING (public.is_house_admin(house_id));
 
--- 6.5 Products (catálogo global — leitura para todos autenticados, escrita para criador)
+-- 6.5 Products (catálogo global — leitura/inserção autenticados, atualização apenas do próprio criador)
 DROP POLICY IF EXISTS "products_select"  ON public.products;
 DROP POLICY IF EXISTS "products_insert"  ON public.products;
 DROP POLICY IF EXISTS "products_update"  ON public.products;
@@ -428,9 +435,9 @@ DROP POLICY IF EXISTS "products_update"  ON public.products;
 CREATE POLICY "products_select" ON public.products FOR SELECT
   USING (auth.role() = 'authenticated');
 CREATE POLICY "products_insert" ON public.products FOR INSERT
-  WITH CHECK (auth.role() = 'authenticated');
+  WITH CHECK (auth.role() = 'authenticated' AND created_by = auth.uid());
 CREATE POLICY "products_update" ON public.products FOR UPDATE
-  USING (auth.role() = 'authenticated');
+  USING (created_by = auth.uid());
 
 -- 6.6 Items
 DROP POLICY IF EXISTS "items_select"  ON public.items;
@@ -466,7 +473,7 @@ CREATE POLICY "push_subscriptions_delete" ON public.push_subscriptions FOR DELET
   USING (user_id = auth.uid());
 
 -- ── 7. STORAGE ────────────────────────────────────────────────────────────────
--- Cria os buckets apenas se não existirem (idempotente)
+-- Cria os buckets públicos apenas se não existirem (sem políticas SELECT — acesso direto por URL pública)
 
 INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 VALUES
@@ -474,37 +481,45 @@ VALUES
   ('avatars',        'avatars',        true,  2097152,  ARRAY['image/jpeg','image/png','image/webp'])
 ON CONFLICT (id) DO NOTHING;
 
--- Políticas de Storage — product-images
+-- Políticas de Storage — product-images (upload e exclusão limitados à pasta do próprio utilizador)
 DO $$ BEGIN
   DROP POLICY IF EXISTS "product_images_select" ON storage.objects;
   DROP POLICY IF EXISTS "product_images_insert" ON storage.objects;
   DROP POLICY IF EXISTS "product_images_delete" ON storage.objects;
 EXCEPTION WHEN undefined_object THEN NULL; END $$;
 
-CREATE POLICY "product_images_select" ON storage.objects FOR SELECT
-  USING (bucket_id = 'product-images');
-
 CREATE POLICY "product_images_insert" ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'product-images' AND auth.role() = 'authenticated');
+  WITH CHECK (
+    bucket_id = 'product-images'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 CREATE POLICY "product_images_delete" ON storage.objects FOR DELETE
-  USING (bucket_id = 'product-images' AND (storage.foldername(name))[1] = auth.uid()::text);
+  USING (
+    bucket_id = 'product-images'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 
--- Políticas de Storage — avatars
+-- Políticas de Storage — avatars (upload e exclusão limitados à pasta do próprio utilizador)
 DO $$ BEGIN
   DROP POLICY IF EXISTS "avatars_select" ON storage.objects;
   DROP POLICY IF EXISTS "avatars_insert" ON storage.objects;
   DROP POLICY IF EXISTS "avatars_delete" ON storage.objects;
 EXCEPTION WHEN undefined_object THEN NULL; END $$;
 
-CREATE POLICY "avatars_select" ON storage.objects FOR SELECT
-  USING (bucket_id = 'avatars');
-
 CREATE POLICY "avatars_insert" ON storage.objects FOR INSERT
-  WITH CHECK (bucket_id = 'avatars' AND auth.role() = 'authenticated');
+  WITH CHECK (
+    bucket_id = 'avatars'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 CREATE POLICY "avatars_delete" ON storage.objects FOR DELETE
-  USING (bucket_id = 'avatars' AND (storage.foldername(name))[1] = auth.uid()::text);
+  USING (
+    bucket_id = 'avatars'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 -- ── 8. REALTIME ───────────────────────────────────────────────────────────────
 

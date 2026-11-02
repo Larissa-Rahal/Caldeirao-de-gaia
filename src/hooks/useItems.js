@@ -47,21 +47,23 @@ export async function upsertProduct({ name, brand, barcode, defaultUnit, imageUr
   if (cleanBarcode) {
     const { data: existing } = await supabase
       .from('products')
-      .select('id, name, brand, default_unit, image_url')
+      .select('id, name, brand, default_unit, image_url, created_by')
       .eq('barcode', cleanBarcode)
       .maybeSingle()
 
     if (existing) {
-      const updates = {
-        name:         cleanName  || existing.name,
-        brand:        cleanBrand ?? existing.brand,
-        default_unit: cleanUnit  || existing.default_unit || 'un',
-        image_url:    cleanImage ?? existing.image_url,
+      if (existing.created_by === userId) {
+        const updates = {
+          name:         cleanName  || existing.name,
+          brand:        cleanBrand ?? existing.brand,
+          default_unit: cleanUnit  || existing.default_unit || 'un',
+          image_url:    cleanImage ?? existing.image_url,
+        }
+        await supabase
+          .from('products')
+          .update(updates)
+          .eq('id', existing.id)
       }
-      await supabase
-        .from('products')
-        .update(updates)
-        .eq('id', existing.id)
       return existing.id
     }
 
