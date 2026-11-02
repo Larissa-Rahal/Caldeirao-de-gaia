@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { ChevronDown, Plus, Home } from 'lucide-react'
+import { ChevronDown, Plus, Home, LogIn } from 'lucide-react'
 import { useHouse } from '@/contexts/HouseContext'
 import { cn } from '@/lib/utils'
 
-export function HouseSwitcher({ onCreateHouse }) {
+export function HouseSwitcher({ onCreateHouse, onJoinHouse }) {
   const { houses, activeHouse, setActiveHouse } = useHouse()
   const [open, setOpen] = useState(false)
 
@@ -20,7 +20,7 @@ export function HouseSwitcher({ onCreateHouse }) {
         )}
         aria-haspopup="listbox"
         aria-expanded={open}
-        aria-label="Selecionar casa"
+        aria-label="Selecionar caldeirão"
       >
         <Home size={15} className="shrink-0" />
         <span className="truncate">{activeHouse.name}</span>
@@ -32,8 +32,8 @@ export function HouseSwitcher({ onCreateHouse }) {
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} aria-hidden="true" />
           <div
             role="listbox"
-            aria-label="Casas"
-            className="absolute left-0 top-full mt-1 z-20 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 overflow-hidden"
+            aria-label="Caldeirões"
+            className="absolute left-0 top-full mt-1 z-20 w-60 bg-white rounded-2xl shadow-xl border border-gray-100 py-1.5 overflow-hidden"
           >
             {houses.map(house => (
               <button
@@ -58,11 +58,18 @@ export function HouseSwitcher({ onCreateHouse }) {
 
             <div className="border-t border-gray-100 mt-1 pt-1">
               <button
-                onClick={() => { setOpen(false); onCreateHouse() }}
+                onClick={() => { setOpen(false); onCreateHouse?.() }}
                 className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-primary-600 hover:bg-primary-50 transition"
               >
                 <Plus size={14} />
-                Nova casa
+                Novo caldeirão
+              </button>
+              <button
+                onClick={() => { setOpen(false); onJoinHouse?.() }}
+                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-primary-600 hover:bg-primary-50 transition"
+              >
+                <LogIn size={14} />
+                Entrar com código
               </button>
             </div>
           </div>

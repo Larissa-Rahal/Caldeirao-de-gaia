@@ -70,7 +70,12 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
   async function handleShare() {
     const lines = grouped.flatMap(([, g]) => [
       `\n${g.label}`,
-      ...g.items.map(i => `  ${checked.has(i.id) ? '✅' : '☐'} ${i.name}${i.quantity ? ` (${i.quantity})` : ''}`)
+      ...g.items.map(i => {
+        const qty = i.qty_value != null
+          ? ` (${i.qty_value}${i.qty_unit ? ' ' + i.qty_unit : ''})`
+          : ''
+        return `  ${checked.has(i.id) ? '✅' : '☐'} ${i.name}${qty}`
+      })
     ])
     const text = `🛒 Lista de Compras — Caldeirão de Gaia\n${lines.join('\n')}`
 
@@ -160,8 +165,10 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
                           <p className={cn('text-sm font-medium', isChecked && 'line-through text-gray-400')}>
                             {item.name}
                           </p>
-                          {item.quantity && (
-                            <p className="text-xs text-gray-400">{item.quantity}</p>
+                          {item.qty_value != null && (
+                            <p className="text-xs text-gray-400">
+                              {item.qty_value}{item.qty_unit ? ' ' + item.qty_unit : ''}
+                            </p>
                           )}
                         </div>
 

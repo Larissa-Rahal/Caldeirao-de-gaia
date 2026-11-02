@@ -154,19 +154,43 @@ export function useItems() {
 
   function cycleStatus(itemId, currentStatus) {
     const next = STATUS_CYCLE[currentStatus]
+    // Se vai para Em Falta, zera a quantidade
+    const localChanges = {
+      status: next,
+      updated_by: user.id,
+      updated_at: new Date().toISOString(),
+      ...(next === 'out_of_stock' ? { qty_value: null } : {}),
+    }
+    const serverChanges = {
+      status: next,
+      updated_by: user.id,
+      ...(next === 'out_of_stock' ? { qty_value: null } : {}),
+    }
     return optimisticUpdate(
       itemId,
-      { status: next, updated_by: user.id, updated_at: new Date().toISOString() },
-      () => supabase.from('items').update({ status: next, updated_by: user.id }).eq('id', itemId)
+      localChanges,
+      () => supabase.from('items').update(serverChanges).eq('id', itemId)
         .then(({ error: err }) => { if (err) throw err })
     )
   }
 
   function setStatus(itemId, status) {
+    // Se vai para Em Falta, zera a quantidade
+    const localChanges = {
+      status,
+      updated_by: user.id,
+      updated_at: new Date().toISOString(),
+      ...(status === 'out_of_stock' ? { qty_value: null } : {}),
+    }
+    const serverChanges = {
+      status,
+      updated_by: user.id,
+      ...(status === 'out_of_stock' ? { qty_value: null } : {}),
+    }
     return optimisticUpdate(
       itemId,
-      { status, updated_by: user.id, updated_at: new Date().toISOString() },
-      () => supabase.from('items').update({ status, updated_by: user.id }).eq('id', itemId)
+      localChanges,
+      () => supabase.from('items').update(serverChanges).eq('id', itemId)
         .then(({ error: err }) => { if (err) throw err })
     )
   }

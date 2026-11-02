@@ -7,7 +7,7 @@ import { ProfileModal } from '@/components/user/ProfileModal'
 import { useAuth } from '@/contexts/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
 
-export function Header({ onCreateHouse, onOpenSettings }) {
+export function Header({ onCreateHouse, onJoinHouse, onOpenSettings }) {
   const { profile, signOut } = useAuth()
   const { isDark, toggle }   = useTheme()
   const [menuOpen,    setMenuOpen]    = useState(false)
@@ -38,7 +38,7 @@ export function Header({ onCreateHouse, onOpenSettings }) {
 
           {/* Seletor de casa */}
           <div className="flex-1 min-w-0">
-            <HouseSwitcher onCreateHouse={onCreateHouse} />
+            <HouseSwitcher onCreateHouse={onCreateHouse} onJoinHouse={onJoinHouse} />
           </div>
 
           {/* Toggle tema */}

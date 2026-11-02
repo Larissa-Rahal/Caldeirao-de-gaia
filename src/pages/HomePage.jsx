@@ -12,6 +12,7 @@ import { STATUS_CONFIG } from '@/lib/defaults'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 import { CreateHouseModal } from '@/components/house/CreateHouseModal'
+import { JoinHouseModal } from '@/components/house/JoinHouseModal'
 import { SettingsModal } from '@/components/house/SettingsModal'
 
 const STATUS_FILTERS = ['all', 'in_stock', 'running_low', 'out_of_stock']
@@ -29,6 +30,7 @@ export function HomePage() {
   const [addOpen,         setAddOpen]         = useState(false)
   const [editItem,        setEditItem]        = useState(null)
   const [createHouseOpen, setCreateHouseOpen] = useState(false)
+  const [joinHouseOpen,   setJoinHouseOpen]   = useState(false)
   const [settingsOpen,    setSettingsOpen]    = useState(false)
   const [marketOpen,      setMarketOpen]      = useState(false)
 
@@ -114,6 +116,7 @@ export function HomePage() {
     <div className="min-h-dvh bg-gray-50 flex flex-col">
       <Header
         onCreateHouse={() => setCreateHouseOpen(true)}
+        onJoinHouse={() => setJoinHouseOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
       />
 
@@ -330,6 +333,10 @@ export function HomePage() {
       <CreateHouseModal
         open={createHouseOpen}
         onClose={() => setCreateHouseOpen(false)}
+      />
+      <JoinHouseModal
+        open={joinHouseOpen}
+        onClose={() => setJoinHouseOpen(false)}
       />
       <SettingsModal
         open={settingsOpen}
