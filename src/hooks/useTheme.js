@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-const STORAGE_KEY = 'caldeir�o_theme'
+const STORAGE_KEY = 'caldeirão_theme'
 const DEFAULT     = 'dark'  // grimório por defeito
 
 export function useTheme() {

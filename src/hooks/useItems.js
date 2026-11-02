@@ -37,7 +37,11 @@ function normalizeItem(row) {
  * Reutiliza pelo barcode se fornecido; caso contrário cria ou atualiza o registo em `products`.
  * Retorna o product_id.
  */
-export async function upsertProduct({ name, brand, barcode, defaultUnit, imageUrl, userId }) {
+export async function upsertProduct({ productId, name, brand, barcode, defaultUnit, imageUrl, userId }) {
+  if (productId) {
+    return productId
+  }
+
   const cleanName    = name?.trim()    || ''
   const cleanBrand   = brand?.trim()   || null
   const cleanBarcode = barcode?.trim() || null
@@ -81,6 +85,23 @@ export async function upsertProduct({ name, brand, barcode, defaultUnit, imageUr
       .single()
     if (error) throw error
     return data.id
+  }
+
+  // Sem código de barras: verifica se já existe produto com mesmo nome (e marca, se informada)
+  let query = supabase
+    .from('products')
+    .select('id, name, brand, default_unit, image_url, created_by')
+    .ilike('name', cleanName)
+
+  if (cleanBrand) {
+    query = query.ilike('brand', cleanBrand)
+  } else {
+    query = query.is('brand', null)
+  }
+
+  const { data: existingByName } = await query.limit(1).maybeSingle()
+  if (existingByName) {
+    return existingByName.id
   }
 
   const { data, error } = await supabase
@@ -212,9 +233,10 @@ export function useItems() {
    *   categoryId, notes, imageUrl       — metadados do item
    *   qty_value, qty_unit               — quantidade tipada (com fallback para default_unit)
    */
-  async function addItem({ name, brand, barcode, defaultUnit, categoryId, notes, imageUrl, qty_value, qty_unit }) {
+  async function addItem({ productId: existingProductId, name, brand, barcode, defaultUnit, categoryId, notes, imageUrl, qty_value, qty_unit }) {
     const resolvedDefaultUnit = defaultUnit || qty_unit || 'un'
     const productId = await upsertProduct({
+      productId:   existingProductId,
       name,
       brand,
       barcode,

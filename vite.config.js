@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Caldeir„o de Gaia',
-        short_name: 'Caldeir„o de Gaia',
+        name: 'Caldeir√£o de Gaia',
+        short_name: 'Caldeir√£o de Gaia',
         description: 'Controle de estoque dom√©stico compartilhado',
         theme_color: '#5B21B6',
         background_color: '#ffffff',
@@ -25,5 +25,11 @@ export default defineConfig({
   ],
   resolve: {
     alias: { '@': '/src' }
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/test/setup.js',
+    exclude: ['node_modules', 'dist', 'supabase/**']
   }
 })

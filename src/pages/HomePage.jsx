@@ -14,6 +14,8 @@ import toast from 'react-hot-toast'
 import { CreateHouseModal } from '@/components/house/CreateHouseModal'
 import { JoinHouseModal } from '@/components/house/JoinHouseModal'
 import { SettingsModal } from '@/components/house/SettingsModal'
+import { ActivityLog } from '@/components/house/ActivityLog'
+import { Modal } from '@/components/ui/Modal'
 
 const STATUS_FILTERS = ['all', 'in_stock', 'running_low', 'out_of_stock']
 const VIEW_KEY = 'caldeirão_view'
@@ -34,6 +36,7 @@ export function HomePage() {
   const [settingsOpen,    setSettingsOpen]    = useState(false)
   const [marketOpen,      setMarketOpen]      = useState(false)
   const [receiptOpen,     setReceiptOpen]     = useState(false)
+  const [historyOpen,     setHistoryOpen]     = useState(false)
 
   function toggleView() {
     const next = viewMode === 'grid' ? 'compact' : 'grid'
@@ -128,6 +131,7 @@ export function HomePage() {
         onOpenSettings={() => setSettingsOpen(true)}
         onOpenMarket={() => setMarketOpen(true)}
         onOpenReceiptScanner={() => setReceiptOpen(true)}
+        onOpenHistory={() => setHistoryOpen(true)}
         needsMarket={needsMarket}
       />
 
@@ -389,6 +393,7 @@ export function HomePage() {
         onClose={() => setAddOpen(false)}
         onSubmit={handleAddItem}
         categories={categories}
+        existingItems={items}
       />
       <ItemFormModal
         open={Boolean(editItem)}
@@ -421,6 +426,15 @@ export function HomePage() {
         onRestockItem={restockItem}
         onAddItem={addItem}
       />
+      <Modal
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        title="📜 Histórico do Caldeirão"
+      >
+        <div className="max-h-[65vh] overflow-y-auto -mx-5 px-5">
+          <ActivityLog />
+        </div>
+      </Modal>
     </div>
   )
 }

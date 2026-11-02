@@ -8,7 +8,6 @@ import { useHouse } from '@/contexts/HouseContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { copyToClipboard } from '@/lib/utils'
 import { buildInviteUrl } from '@/lib/defaults'
-import { ActivityLog } from './ActivityLog'
 import toast from 'react-hot-toast'
 
 export function SettingsModal({ open, onClose, categories = [], addCategory, deleteCategory }) {
@@ -107,7 +106,6 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
     { key: 'invite',     label: 'Convite' },
     { key: 'members',    label: `Membros (${members.length})` },
     { key: 'categories', label: 'Categorias' },
-    { key: 'log',        label: 'Histórico' },
   ]
 
   return (
@@ -242,12 +240,6 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
             />
             <Button type="submit" size="md" disabled={!newCatName.trim()}>+</Button>
           </form>
-        </div>
-      )}
-
-      {tab === 'log' && (
-        <div className="max-h-[60vh] overflow-y-auto -mx-5 px-5">
-          <ActivityLog />
         </div>
       )}
     </Modal>

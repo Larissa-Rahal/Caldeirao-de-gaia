@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { LogOut, Sun, Moon, UserCog, ShoppingCart, ReceiptText } from 'lucide-react'
+import { LogOut, Sun, Moon, UserCog, ShoppingCart, ReceiptText, History } from 'lucide-react'
 import { HouseSwitcher } from './HouseSwitcher'
 import { Avatar } from '@/components/ui/Avatar'
 import { PushNotificationToggle } from '@/components/ui/PushNotificationToggle'
@@ -14,6 +14,7 @@ export function Header({
   onOpenSettings,
   onOpenMarket,
   onOpenReceiptScanner,
+  onOpenHistory,
   needsMarket = 0,
 }) {
   const { profile, signOut } = useAuth()
@@ -132,6 +133,18 @@ export function Header({
                     <div className="px-2 py-2 border-b border-gray-100">
                       <PushNotificationToggle />
                     </div>
+
+                    {onOpenHistory && (
+                      <button
+                        onClick={() => {
+                          setMenuOpen(false)
+                          onOpenHistory()
+                        }}
+                        className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition"
+                      >
+                        <History size={15} /> Histórico
+                      </button>
+                    )}
 
                     <button
                       onClick={openProfile}
