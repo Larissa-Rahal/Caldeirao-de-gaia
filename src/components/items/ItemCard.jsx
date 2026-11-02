@@ -3,7 +3,7 @@ import { MoreVertical, Pencil, Trash2, ChevronRight, ExternalLink } from 'lucide
 import { STATUS_CONFIG, STATUS_CYCLE, getCategoryPlaceholder } from '@/lib/defaults'
 import { timeAgo, cn } from '@/lib/utils'
 
-const UNIT_TYPES = ['unid', 'cx', 'pct', 'par']
+const UNIT_TYPES = ['un', 'unid', 'cx', 'pct', 'par']
 
 export function ItemCard({
   item, onCycleStatus, onEdit, onDelete,
@@ -15,17 +15,21 @@ export function ItemCard({
   const [qtyDraft,   setQtyDraft]   = useState('')
   const qtyInputRef = useRef(null)
 
-  const productName = item.product?.name ?? item.name ?? '' // fallback de segurança
+  const productName  = item.product?.name         ?? item.name         ?? ''
+  const productBrand = item.product?.brand        ?? item.brand        ?? null
+  const defaultUnit  = item.product?.default_unit ?? item.default_unit ?? 'un'
+  const qtyUnit      = item.qty_unit || defaultUnit
+
   const cfg         = STATUS_CONFIG[item.status]
   const nextCfg     = STATUS_CONFIG[STATUS_CYCLE[item.status]]
   const updaterName = item.updater?.full_name ?? 'Alguém'
   const placeholder = getCategoryPlaceholder(item.category?.name ?? '', item.category?.emoji ?? '📦')
 
   const hasQty     = item.qty_value != null
-  const isUnit     = hasQty && UNIT_TYPES.includes(item.qty_unit)
+  const isUnit     = hasQty && UNIT_TYPES.includes(qtyUnit)
   const isWeight   = hasQty && !isUnit
   const qtyDisplay = hasQty
-    ? `${item.qty_value}${item.qty_unit ? ' ' + item.qty_unit : ''}`
+    ? `${item.qty_value}${qtyUnit ? ' ' + qtyUnit : ''}`
     : null
 
   function handleStatusClick(e) {
@@ -35,7 +39,8 @@ export function ItemCard({
 
   function handleGoogleShopping(e) {
     e.stopPropagation()
-    window.open(`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(productName)}&hl=pt`, '_blank', 'noopener')
+    const query = [productName, productBrand].filter(Boolean).join(' ')
+    window.open(`https://www.google.com/search?tbm=shop&q=${encodeURIComponent(query)}&hl=pt`, '_blank', 'noopener')
   }
 
   function handleAdjust(delta, e) {
@@ -64,7 +69,7 @@ export function ItemCard({
     if (e.key === 'Escape') { setEditingQty(false) }
   }
 
-  function QuantityControl({ size = 'sm' }) {
+  function QtyControl({ size = 'sm' }) {
     if (!hasQty) return null
     const isSmall = size === 'sm'
     const btnCls = isSmall
@@ -86,7 +91,7 @@ export function ItemCard({
             Number(item.qty_value) === 0 && 'text-red-500',
             Number(item.qty_value) === 1 && 'text-amber-500',
           )}>
-            {item.qty_value}{item.qty_unit ? <span className="text-gray-400 font-normal ml-0.5 text-[10px]">{item.qty_unit}</span> : null}
+            {item.qty_value}{qtyUnit ? <span className="text-gray-400 font-normal ml-0.5 text-[10px]">{qtyUnit}</span> : null}
           </span>
           <button
             onClick={e => handleAdjust(+1, e)}
@@ -115,7 +120,7 @@ export function ItemCard({
             inputMode="decimal"
             autoFocus
           />
-          {item.qty_unit && <span className="text-xs text-gray-400">{item.qty_unit}</span>}
+          {qtyUnit && <span className="text-xs text-gray-400">{qtyUnit}</span>}
         </div>
       ) : (
         <button
@@ -149,6 +154,9 @@ export function ItemCard({
           <p className={cn('text-sm font-medium text-gray-900 truncate',
             item.status === 'out_of_stock' && 'line-through text-gray-400')}>
             {productName}
+            {productBrand && (
+              <span className="text-xs font-normal text-gray-400 ml-1.5">· {productBrand}</span>
+            )}
           </p>
           {item.category && (
             <p className="text-xs text-gray-400">{item.category.emoji} {item.category.name}</p>
@@ -156,7 +164,7 @@ export function ItemCard({
         </div>
 
         <div className="flex items-center gap-2 flex-shrink-0">
-          <QuantityControl size="sm" />
+          <QtyControl size="sm" />
           <button onClick={handleStatusClick}
             className={cn('flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold border transition-all',
               cfg.bg, cfg.text, cfg.border)}>
@@ -196,7 +204,11 @@ export function ItemCard({
               item.status === 'out_of_stock' && 'line-through text-gray-400')}>
               {productName}
             </p>
-            {item.notes && <p className="text-xs text-gray-400 truncate mt-0.5">{item.notes}</p>}
+            {(productBrand || item.notes) && (
+              <p className="text-xs text-gray-400 truncate mt-0.5">
+                {[productBrand, item.notes].filter(Boolean).join(' · ')}
+              </p>
+            )}
           </div>
           <div className="relative flex-shrink-0">
             <button onClick={e => { e.stopPropagation(); setMenuOpen(v => !v) }}
@@ -214,7 +226,7 @@ export function ItemCard({
           </p>
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <QuantityControl size="sm" />
+            <QtyControl size="sm" />
             <button onClick={handleStatusClick}
               className={cn(
                 'flex items-center gap-0.5 px-2 py-1 rounded-lg text-xs font-semibold',

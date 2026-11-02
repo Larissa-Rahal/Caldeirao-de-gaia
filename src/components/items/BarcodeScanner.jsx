@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { X, Loader2, ScanLine } from 'lucide-react'
+import { supabase } from '@/lib/supabase'
 
 export function BarcodeScanner({ onResult, onClose }) {
   const videoRef  = useRef(null)
@@ -53,18 +54,42 @@ export function BarcodeScanner({ onResult, onClose }) {
   async function lookupBarcode(code) {
     setStatus('loading')
     try {
+      const { data: existing } = await supabase
+        .from('products')
+        .select('name, brand, barcode, default_unit, image_url')
+        .eq('barcode', code)
+        .maybeSingle()
+
+      if (existing) {
+        setProduct({
+          name:        existing.name         || '',
+          brand:       existing.brand        || '',
+          defaultUnit: existing.default_unit || 'un',
+          imageUrl:    existing.image_url    || null,
+          barcode:     code,
+        })
+        setStatus('found')
+        return
+      }
+
       const res  = await fetch(`https://world.openfoodfacts.org/api/v0/product/${code}.json`)
       const data = await res.json()
       if (data.status === 1 && data.product) {
         const p = data.product
-        setProduct({ name: p.product_name || p.product_name_pt || '', imageUrl: p.image_front_small_url || null, notes: p.brands || '', barcode: code })
+        setProduct({
+          name:        p.product_name || p.product_name_pt || '',
+          brand:       p.brands || '',
+          defaultUnit: 'un',
+          imageUrl:    p.image_front_small_url || null,
+          barcode:     code,
+        })
         setStatus('found')
       } else {
-        setProduct({ name: '', barcode: code })
+        setProduct({ name: '', brand: '', defaultUnit: 'un', barcode: code })
         setStatus('not_found')
       }
     } catch {
-      setProduct({ name: '', barcode: code })
+      setProduct({ name: '', brand: '', defaultUnit: 'un', barcode: code })
       setStatus('not_found')
     }
   }
@@ -118,7 +143,7 @@ export function BarcodeScanner({ onResult, onClose }) {
               ? <p className="text-sm text-amber-600">Produto não encontrado no banco de dados.</p>
               : <>
                   <p className="text-sm font-semibold text-gray-900 truncate">{product.name || '—'}</p>
-                  {product.notes && <p className="text-xs text-gray-400 truncate">{product.notes}</p>}
+                  {product.brand && <p className="text-xs text-gray-400 truncate">{product.brand}</p>}
                 </>
             }
           </div>
@@ -155,11 +180,11 @@ export function BarcodeScanner({ onResult, onClose }) {
 
       {(status === 'found' || status === 'not_found') && (
         <div className="flex gap-2">
-          <button onClick={onClose}
+          <button type="button" onClick={onClose}
             className="flex-1 py-2.5 rounded-xl border border-gray-300 text-sm text-gray-600 hover:bg-gray-50 transition">
             Cancelar
           </button>
-          <button onClick={() => product && onResult(product)}
+          <button type="button" onClick={() => product && onResult(product)}
             className="flex-1 py-2.5 rounded-xl bg-primary-600 text-white text-sm font-medium hover:bg-primary-700 transition">
             {status === 'not_found' ? 'Usar código' : 'Usar produto'}
           </button>

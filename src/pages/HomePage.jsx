@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/Button'
 import { MarketModal } from '@/components/house/MarketModal'
 import { useItems } from '@/hooks/useItems'
 import { useCategories } from '@/hooks/useCategories'
-import { useHouse } from '@/contexts/HouseContext'
 import { STATUS_CONFIG } from '@/lib/defaults'
 import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
@@ -19,8 +18,7 @@ const STATUS_FILTERS = ['all', 'in_stock', 'running_low', 'out_of_stock']
 const VIEW_KEY = 'caldeirão_view'
 
 export function HomePage() {
-  const { activeHouse } = useHouse()
-  const { items, loading, cycleStatus, setStatus, addItem, updateItem, deleteItem, adjustQuantity, updateQuantityValue } = useItems()
+  const { items, loading, cycleStatus, setStatus, addItem, updateItem, deleteItem, adjustQty, updateQtyValue } = useItems()
   const { categories, addCategory, deleteCategory } = useCategories()
 
   const [search,          setSearch]          = useState('')
@@ -41,9 +39,15 @@ export function HomePage() {
   }
 
   const filtered = useMemo(() => {
+    const query = search.toLowerCase().trim()
     return items.filter(item => {
-      const name          = item.product?.name ?? ''
-      const matchSearch   = name.toLowerCase().includes(search.toLowerCase())
+      const name          = item.product?.name    ?? item.name    ?? ''
+      const brand         = item.product?.brand   ?? item.brand   ?? ''
+      const barcode       = item.product?.barcode ?? item.barcode ?? ''
+      const matchSearch   = !query
+        || name.toLowerCase().includes(query)
+        || brand.toLowerCase().includes(query)
+        || barcode.toLowerCase().includes(query)
       const matchStatus   = statusFilter === 'all' || item.status === statusFilter
       const matchCategory = categoryFilter === 'all' || item.category_id === categoryFilter
       return matchSearch && matchStatus && matchCategory
@@ -98,7 +102,8 @@ export function HomePage() {
       barcode:     data.barcode,
       defaultUnit: data.defaultUnit,
       categoryId:  data.categoryId,
-      quantity:    data.quantity,
+      qty_value:   data.qty_value,
+      qty_unit:    data.qty_unit,
       notes:       data.notes,
       imageUrl:    data.imageUrl,
     })
@@ -267,8 +272,8 @@ export function HomePage() {
                         viewMode="grid"
                         onCycleStatus={handleCycleStatus}
                         onSetStatus={handleSetStatus}
-                        onAdjustQty={adjustQuantity}
-                        onUpdateQtyValue={updateQuantityValue}
+                        onAdjustQty={adjustQty}
+                        onUpdateQtyValue={updateQtyValue}
                         onEdit={setEditItem}
                         onDelete={handleDeleteItem}
                       />
@@ -283,8 +288,8 @@ export function HomePage() {
                         viewMode="compact"
                         onCycleStatus={handleCycleStatus}
                         onSetStatus={handleSetStatus}
-                        onAdjustQty={adjustQuantity}
-                        onUpdateQtyValue={updateQuantityValue}
+                        onAdjustQty={adjustQty}
+                        onUpdateQtyValue={updateQtyValue}
                         onEdit={setEditItem}
                         onDelete={handleDeleteItem}
                       />

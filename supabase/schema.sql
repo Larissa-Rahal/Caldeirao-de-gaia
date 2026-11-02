@@ -68,7 +68,6 @@ RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_item_name text;
 BEGIN
-  -- Tenta obter o nome via join com products
   IF TG_OP = 'DELETE' THEN
     SELECT p.name INTO v_item_name
       FROM public.products p WHERE p.id = OLD.product_id;
@@ -124,6 +123,85 @@ BEGIN
 END;
 $$;
 
+-- 2.7 Cria perfil automaticamente ao registar novo utilizador em auth.users
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.profiles (id, email, full_name)
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1))
+  )
+  ON CONFLICT (id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+-- 2.8 Adiciona o dono automaticamente como membro (owner) ao criar uma casa
+CREATE OR REPLACE FUNCTION public.add_owner_as_member()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  INSERT INTO public.house_members (house_id, user_id, role)
+  VALUES (NEW.id, NEW.owner_id, 'owner')
+  ON CONFLICT (house_id, user_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$;
+
+-- 2.9 Regista entradas e saídas de membros no activity_log
+CREATE OR REPLACE FUNCTION public.log_member_changes()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    INSERT INTO public.activity_log (house_id, user_id, action, metadata)
+    VALUES (NEW.house_id, NEW.user_id, 'member_joined', jsonb_build_object('role', NEW.role));
+    RETURN NEW;
+  ELSIF TG_OP = 'DELETE' THEN
+    INSERT INTO public.activity_log (house_id, user_id, action, metadata)
+    VALUES (OLD.house_id, OLD.user_id, 'member_left', jsonb_build_object('role', OLD.role));
+    RETURN OLD;
+  END IF;
+  RETURN NULL;
+END;
+$$;
+
+-- 2.10 Entrar numa casa através de código de convite
+CREATE OR REPLACE FUNCTION public.join_house(p_invite_code text)
+RETURNS json LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE
+  found_house_id uuid;
+  current_user_id uuid;
+BEGIN
+  current_user_id := auth.uid();
+
+  IF current_user_id IS NULL THEN
+    RETURN json_build_object('error', 'Não autenticado');
+  END IF;
+
+  SELECT id INTO found_house_id
+  FROM public.houses
+  WHERE invite_code = upper(trim(p_invite_code))
+  LIMIT 1;
+
+  IF found_house_id IS NULL THEN
+    RETURN json_build_object('error', 'Código de convite inválido');
+  END IF;
+
+  IF EXISTS (
+    SELECT 1 FROM public.house_members
+    WHERE house_id = found_house_id AND user_id = current_user_id
+  ) THEN
+    RETURN json_build_object('house_id', found_house_id::text, 'already_member', true);
+  END IF;
+
+  INSERT INTO public.house_members (house_id, user_id, role)
+  VALUES (found_house_id, current_user_id, 'member');
+
+  RETURN json_build_object('house_id', found_house_id::text, 'already_member', false);
+END;
+$$;
+
 -- ── 3. TABELAS ────────────────────────────────────────────────────────────────
 
 -- 3.1 Profiles (espelho de auth.users)
@@ -149,10 +227,10 @@ CREATE TABLE IF NOT EXISTS public.houses (
 
 -- 3.3 House Members
 CREATE TABLE IF NOT EXISTS public.house_members (
-  id       uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  house_id uuid NOT NULL REFERENCES public.houses(id) ON DELETE CASCADE,
-  user_id  uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  role     public.house_role NOT NULL DEFAULT 'member'::public.house_role,
+  id        uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  house_id  uuid NOT NULL REFERENCES public.houses(id) ON DELETE CASCADE,
+  user_id   uuid NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
+  role      public.house_role NOT NULL DEFAULT 'member'::public.house_role,
   joined_at timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT uq_house_member UNIQUE (house_id, user_id)
 );
@@ -181,8 +259,6 @@ CREATE TABLE IF NOT EXISTS public.products (
 );
 
 -- 3.6 Items — instância do produto no estoque de uma casa
---   NOTA: as colunas `quantity` (text) e `legacy_item_id` (uuid) foram
---   removidas nesta versão; use qty_value (numeric) e qty_unit (text).
 CREATE TABLE IF NOT EXISTS public.items (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   house_id    uuid NOT NULL REFERENCES public.houses(id) ON DELETE CASCADE,
@@ -264,15 +340,33 @@ CREATE TRIGGER trg_items_activity_log
   AFTER INSERT OR UPDATE OR DELETE ON public.items
   FOR EACH ROW EXECUTE FUNCTION public.log_item_changes();
 
+-- perfil automático em auth.users
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- membro owner automático em houses
+DROP TRIGGER IF EXISTS on_house_created ON public.houses;
+CREATE TRIGGER on_house_created
+  AFTER INSERT ON public.houses
+  FOR EACH ROW EXECUTE FUNCTION public.add_owner_as_member();
+
+-- activity_log automático em house_members
+DROP TRIGGER IF EXISTS trg_house_members_activity_log ON public.house_members;
+CREATE TRIGGER trg_house_members_activity_log
+  AFTER INSERT OR DELETE ON public.house_members
+  FOR EACH ROW EXECUTE FUNCTION public.log_member_changes();
+
 -- ── 6. ROW LEVEL SECURITY ─────────────────────────────────────────────────────
 
-ALTER TABLE public.profiles         ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.houses           ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.house_members    ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.categories       ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.products         ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.items            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.activity_log     ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.profiles           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.houses             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.house_members      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories         ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.products           ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.items              ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.activity_log       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.push_subscriptions ENABLE ROW LEVEL SECURITY;
 
 -- 6.1 Profiles

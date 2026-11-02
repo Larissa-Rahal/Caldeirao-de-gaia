@@ -5,31 +5,74 @@ import { useHouse } from '@/contexts/HouseContext'
 import { STATUS_CYCLE } from '@/lib/defaults'
 
 const ITEM_SELECT =
-  '*, product:products(*), category:categories(id, name, emoji), updater:profiles!items_updated_by_fkey(id, full_name)'
+  '*, product:products(*), category:categories(*), updater:profiles!items_updated_by_fkey(id, full_name)'
+
+/**
+ * Normaliza os dados do item garantindo que `name`, `brand`, `barcode` e `default_unit`
+ * estejam disponíveis a partir de `products` e que `qty_unit` tenha fallback para `product.default_unit`.
+ */
+function normalizeItem(row) {
+  if (!row) return row
+  const product     = row.product ?? {}
+  const defaultUnit = product.default_unit ?? 'un'
+  return {
+    ...row,
+    product: {
+      ...product,
+      name:         product.name         ?? '',
+      brand:        product.brand        ?? null,
+      barcode:      product.barcode      ?? null,
+      default_unit: defaultUnit,
+    },
+    name:         product.name  ?? '',
+    brand:        product.brand ?? null,
+    barcode:      product.barcode ?? null,
+    default_unit: defaultUnit,
+    qty_unit:     row.qty_unit  || defaultUnit,
+  }
+}
 
 /**
  * Garante que o produto existe na tabela `products`.
- * Reutiliza pelo barcode se fornecido; caso contrário cria sempre novo.
+ * Reutiliza pelo barcode se fornecido; caso contrário cria ou atualiza o registo em `products`.
  * Retorna o product_id.
  */
-async function upsertProduct({ name, brand, barcode, defaultUnit, imageUrl, userId }) {
-  if (barcode?.trim()) {
+export async function upsertProduct({ name, brand, barcode, defaultUnit, imageUrl, userId }) {
+  const cleanName    = name?.trim()    || ''
+  const cleanBrand   = brand?.trim()   || null
+  const cleanBarcode = barcode?.trim() || null
+  const cleanUnit    = defaultUnit     || 'un'
+  const cleanImage   = imageUrl        || null
+
+  if (cleanBarcode) {
     const { data: existing } = await supabase
       .from('products')
-      .select('id')
-      .eq('barcode', barcode.trim())
+      .select('id, name, brand, default_unit, image_url')
+      .eq('barcode', cleanBarcode)
       .maybeSingle()
 
-    if (existing) return existing.id
+    if (existing) {
+      const updates = {
+        name:         cleanName  || existing.name,
+        brand:        cleanBrand ?? existing.brand,
+        default_unit: cleanUnit  || existing.default_unit || 'un',
+        image_url:    cleanImage ?? existing.image_url,
+      }
+      await supabase
+        .from('products')
+        .update(updates)
+        .eq('id', existing.id)
+      return existing.id
+    }
 
     const { data, error } = await supabase
       .from('products')
       .insert({
-        name:         name.trim(),
-        brand:        brand?.trim()   || null,
-        barcode:      barcode.trim(),
-        default_unit: defaultUnit     || 'un',
-        image_url:    imageUrl        || null,
+        name:         cleanName,
+        brand:        cleanBrand,
+        barcode:      cleanBarcode,
+        default_unit: cleanUnit,
+        image_url:    cleanImage,
         created_by:   userId,
       })
       .select('id')
@@ -41,11 +84,11 @@ async function upsertProduct({ name, brand, barcode, defaultUnit, imageUrl, user
   const { data, error } = await supabase
     .from('products')
     .insert({
-      name:         name.trim(),
-      brand:        brand?.trim()     || null,
+      name:         cleanName,
+      brand:        cleanBrand,
       barcode:      null,
-      default_unit: defaultUnit       || 'un',
-      image_url:    imageUrl          || null,
+      default_unit: cleanUnit,
+      image_url:    cleanImage,
       created_by:   userId,
     })
     .select('id')
@@ -72,7 +115,10 @@ export function useItems() {
       .eq('house_id', activeHouse.id)
       .order('created_at', { ascending: true })
     if (err) { setError(err.message); setLoading(false); return }
-    setItems(data ?? [])
+    const normalized = (data ?? [])
+      .map(normalizeItem)
+      .sort((a, b) => (a.product?.name ?? '').localeCompare(b.product?.name ?? ''))
+    setItems(normalized)
     setError(null)
     setLoading(false)
   }, [activeHouse])
@@ -108,10 +154,11 @@ export function useItems() {
               .eq('id', payload.new.id)
               .single()
             if (data) {
+              const normalized = normalizeItem(data)
               setItems(prev =>
-                prev.find(i => i.id === data.id)
+                prev.find(i => i.id === normalized.id)
                   ? prev
-                  : [...prev, data].sort((a, b) =>
+                  : [...prev, normalized].sort((a, b) =>
                       (a.product?.name ?? '').localeCompare(b.product?.name ?? ''))
               )
             }
@@ -119,10 +166,21 @@ export function useItems() {
           }
 
           if (payload.eventType === 'UPDATE') {
-            setItems(prev => prev.map(i => {
-              if (i.id !== payload.new.id) return i
-              return { ...i, ...payload.new, product: i.product, category: i.category, updater: i.updater }
-            }))
+            const { data } = await supabase
+              .from('items')
+              .select(ITEM_SELECT)
+              .eq('id', payload.new.id)
+              .single()
+            if (data) {
+              const normalized = normalizeItem(data)
+              setItems(prev => prev.map(i => i.id === normalized.id ? normalized : i)
+                .sort((a, b) => (a.product?.name ?? '').localeCompare(b.product?.name ?? '')))
+            } else {
+              setItems(prev => prev.map(i => {
+                if (i.id !== payload.new.id) return i
+                return normalizeItem({ ...i, ...payload.new, product: i.product, category: i.category, updater: i.updater })
+              }))
+            }
           }
         }
       )
@@ -139,7 +197,7 @@ export function useItems() {
   }, [activeHouse?.id])
 
   function optimisticUpdate(itemId, localChanges, serverUpdate) {
-    setItems(prev => prev.map(i => i.id === itemId ? { ...i, ...localChanges } : i))
+    setItems(prev => prev.map(i => i.id === itemId ? normalizeItem({ ...i, ...localChanges }) : i))
     pendingRef.current.add(itemId)
     return serverUpdate()
       .catch(err => { fetchItems(); throw err })
@@ -150,12 +208,15 @@ export function useItems() {
    * Adiciona um novo item ao estoque.
    *   name, brand, barcode, defaultUnit — upsert em products
    *   categoryId, notes, imageUrl       — metadados do item
-   *   quantity: { value, unit }         — qty_value / qty_unit
+   *   qty_value, qty_unit               — quantidade tipada (com fallback para default_unit)
    */
-  async function addItem({ name, brand, barcode, defaultUnit, categoryId, notes, imageUrl, quantity }) {
+  async function addItem({ name, brand, barcode, defaultUnit, categoryId, notes, imageUrl, qty_value, qty_unit }) {
+    const resolvedDefaultUnit = defaultUnit || qty_unit || 'un'
     const productId = await upsertProduct({
-      name, brand, barcode,
-      defaultUnit: defaultUnit || quantity?.unit || 'un',
+      name,
+      brand,
+      barcode,
+      defaultUnit: resolvedDefaultUnit,
       imageUrl,
       userId: user.id,
     })
@@ -165,11 +226,11 @@ export function useItems() {
       .insert({
         house_id:    activeHouse.id,
         product_id:  productId,
-        category_id: categoryId ?? null,
-        notes:       notes?.trim() ?? null,
-        image_url:   imageUrl     ?? null,
-        qty_value:   quantity?.value ?? null,
-        qty_unit:    quantity?.unit  ?? defaultUnit ?? 'un',
+        category_id: categoryId    || null,
+        notes:       notes?.trim() || null,
+        image_url:   imageUrl      || null,
+        qty_value:   qty_value != null && qty_value !== '' ? Number(qty_value) : null,
+        qty_unit:    qty_unit      || resolvedDefaultUnit,
         status:      'in_stock',
         created_by:  user.id,
         updated_by:  user.id,
@@ -178,48 +239,55 @@ export function useItems() {
       .single()
     if (err) throw err
 
-    setItems(prev => [...prev, data].sort((a, b) =>
+    const normalized = normalizeItem(data)
+    setItems(prev => [...prev, normalized].sort((a, b) =>
       (a.product?.name ?? '').localeCompare(b.product?.name ?? '')))
-    pendingRef.current.add(data.id)
-    setTimeout(() => pendingRef.current.delete(data.id), 2000)
-    return data
+    pendingRef.current.add(normalized.id)
+    setTimeout(() => pendingRef.current.delete(normalized.id), 2000)
+    return normalized
   }
 
   /**
    * Edita um item existente.
-   * Se nome/marca/barcode mudou, faz upsert num novo product.
-   * Parâmetros: mesmos de addItem + itemId obrigatório.
+   * Se nome/marca/barcode/default_unit mudou, faz upsert em products e vincula o product_id.
    */
-  async function updateItem(itemId, { name, brand, barcode, defaultUnit, categoryId, notes, imageUrl, quantity }) {
+  async function updateItem(itemId, { name, brand, barcode, defaultUnit, categoryId, notes, imageUrl, qty_value, qty_unit }) {
     const item = items.find(i => i.id === itemId)
     if (!item) throw new Error('Item não encontrado')
 
     let productId = item.product_id
 
-    const nameChanged    = name    != null && name.trim()    !== (item.product?.name    ?? '')
-    const brandChanged   = brand   != null && brand.trim()   !== (item.product?.brand   ?? '')
-    const barcodeChanged = barcode != null && barcode.trim() !== (item.product?.barcode ?? '')
+    const nameChanged    = name        !== undefined && (name?.trim()    || '') !== (item.product?.name         ?? '')
+    const brandChanged   = brand       !== undefined && (brand?.trim()   || '') !== (item.product?.brand        ?? '')
+    const barcodeChanged = barcode     !== undefined && (barcode?.trim() || '') !== (item.product?.barcode      ?? '')
+    const unitChanged    = defaultUnit !== undefined && (defaultUnit     || 'un') !== (item.product?.default_unit ?? 'un')
 
-    if (nameChanged || brandChanged || barcodeChanged) {
+    if (nameChanged || brandChanged || barcodeChanged || unitChanged) {
       productId = await upsertProduct({
-        name:        name        ?? item.product?.name,
-        brand:       brand       ?? item.product?.brand,
-        barcode:     barcode     ?? item.product?.barcode,
-        defaultUnit: defaultUnit ?? item.product?.default_unit,
-        imageUrl:    imageUrl    ?? item.product?.image_url,
+        name:        name        !== undefined ? name        : item.product?.name,
+        brand:       brand       !== undefined ? brand       : item.product?.brand,
+        barcode:     barcode     !== undefined ? barcode     : item.product?.barcode,
+        defaultUnit: defaultUnit !== undefined ? defaultUnit : (qty_unit || item.product?.default_unit || 'un'),
+        imageUrl:    imageUrl    !== undefined ? imageUrl    : item.product?.image_url,
         userId:      user.id,
       })
     }
+
+    const resolvedQtyUnit = qty_unit !== undefined
+      ? (qty_unit || defaultUnit || item.product?.default_unit || 'un')
+      : (item.qty_unit || item.product?.default_unit || 'un')
 
     const { data, error: err } = await supabase
       .from('items')
       .update({
         product_id:  productId,
-        category_id: categoryId !== undefined ? (categoryId || null) : item.category_id,
-        notes:       notes      !== undefined ? (notes?.trim()   || null) : item.notes,
-        image_url:   imageUrl   !== undefined ? (imageUrl        || null) : item.image_url,
-        qty_value:   quantity   !== undefined ? (quantity?.value ?? null) : item.qty_value,
-        qty_unit:    quantity   !== undefined ? (quantity?.unit  ?? null) : item.qty_unit,
+        category_id: categoryId !== undefined ? (categoryId || null)    : item.category_id,
+        notes:       notes      !== undefined ? (notes?.trim() || null) : item.notes,
+        image_url:   imageUrl   !== undefined ? (imageUrl || null)      : item.image_url,
+        qty_value:   qty_value  !== undefined
+          ? (qty_value != null && qty_value !== '' ? Number(qty_value) : null)
+          : item.qty_value,
+        qty_unit:    resolvedQtyUnit,
         updated_by:  user.id,
       })
       .eq('id', itemId)
@@ -227,11 +295,12 @@ export function useItems() {
       .single()
     if (err) throw err
 
+    const normalized = normalizeItem(data)
     pendingRef.current.add(itemId)
-    setItems(prev => prev.map(i => i.id === itemId ? data : i)
+    setItems(prev => prev.map(i => i.id === itemId ? normalized : i)
       .sort((a, b) => (a.product?.name ?? '').localeCompare(b.product?.name ?? '')))
     setTimeout(() => pendingRef.current.delete(itemId), 2000)
-    return data
+    return normalized
   }
 
   function cycleStatus(itemId, currentStatus) {
@@ -255,7 +324,7 @@ export function useItems() {
         .then(({ error: err }) => { if (err) throw err }))
   }
 
-  function adjustQuantity(itemId, delta) {
+  function adjustQty(itemId, delta) {
     const item = items.find(i => i.id === itemId)
     if (!item) return Promise.resolve()
     const newVal    = Math.max(0, (Number(item.qty_value) || 0) + delta)
@@ -270,7 +339,7 @@ export function useItems() {
     )
   }
 
-  function updateQuantityValue(itemId, value) {
+  function updateQtyValue(itemId, value) {
     return optimisticUpdate(
       itemId,
       { qty_value: value, updated_by: user.id, updated_at: new Date().toISOString() },
@@ -299,7 +368,7 @@ export function useItems() {
   return {
     items, itemsByCategory, loading, error,
     addItem, cycleStatus, setStatus, updateItem, deleteItem,
-    adjustQuantity, updateQuantityValue,
+    adjustQty, updateQtyValue,
     refetch: fetchItems,
   }
 }

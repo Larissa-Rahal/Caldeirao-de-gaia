@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
     }
 
     // Só notifica para alterações de itens
-    if (!['item_created','item_updated','status_changed','item_deleted'].includes(record.action)) {
+    if (!['item_added','item_updated','status_changed','item_deleted'].includes(record.action)) {
       return new Response('Not a notifiable action', { status: 200 })
     }
 
@@ -197,7 +197,7 @@ Deno.serve(async (req) => {
     let body_text = ''
 
     switch (record.action) {
-      case 'item_created':
+      case 'item_added':
         title     = '➕ Item adicionado'
         body_text = `${actorName} adicionou "${record.item_name}"`
         break

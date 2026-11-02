@@ -5,12 +5,13 @@ import { useHouse } from '@/contexts/HouseContext'
 const PAGE_SIZE = 30
 
 const ACTION_CONFIG = {
-  item_added:     { label: 'adicionou',        icon: '➕', color: 'text-green-600',  bg: 'bg-green-50'  },
-  item_updated:   { label: 'editou',            icon: '✏️',  color: 'text-blue-600',   bg: 'bg-blue-50'   },
-  item_deleted:   { label: 'removeu',           icon: '🗑️',  color: 'text-red-600',    bg: 'bg-red-50'    },
-  status_changed: { label: 'alterou status de', icon: '🔄',  color: 'text-amber-600',  bg: 'bg-amber-50'  },
-  member_joined:  { label: 'entrou no caldeirão', icon: '👋', color: 'text-primary-600', bg: 'bg-primary-50' },
-  member_left:    { label: 'saiu do caldeirão',   icon: '👤', color: 'text-gray-600',   bg: 'bg-gray-50'   },
+  item_added:       { label: 'adicionou',           icon: '➕', color: 'text-green-600',   bg: 'bg-green-50'   },
+  item_updated:     { label: 'editou',              icon: '✏️',  color: 'text-blue-600',    bg: 'bg-blue-50'    },
+  item_deleted:     { label: 'removeu',             icon: '🗑️',  color: 'text-red-600',     bg: 'bg-red-50'     },
+  status_changed:   { label: 'alterou status de',   icon: '🔄',  color: 'text-amber-600',   bg: 'bg-amber-50'   },
+  market_completed: { label: 'concluiu compras',    icon: '🛒',  color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  member_joined:    { label: 'entrou no caldeirão', icon: '👋', color: 'text-primary-600', bg: 'bg-primary-50' },
+  member_left:      { label: 'saiu do caldeirão',   icon: '👤', color: 'text-gray-600',    bg: 'bg-gray-50'    },
 }
 
 const STATUS_LABELS = {

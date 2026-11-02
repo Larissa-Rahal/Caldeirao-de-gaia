@@ -1,18 +1,19 @@
 import { useState, useEffect } from 'react'
-import { Search, Upload, ScanLine } from 'lucide-react'
+import { Upload, ScanLine } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import { ImagePicker } from './ImagePicker'
 import { ImageUploader } from './ImageUploader'
 import { BarcodeScanner } from './BarcodeScanner'
+import { supabase } from '@/lib/supabase'
 import { cn } from '@/lib/utils'
 
 const IMAGE_MODES = [
-  { key: 'search',  label: 'Pesquisar', icon: Search },
-  { key: 'upload',  label: 'Enviar',    icon: Upload },
-  { key: 'barcode', label: 'Código',    icon: ScanLine },
+  { key: 'upload',  label: 'Enviar', icon: Upload },
+  { key: 'barcode', label: 'Código', icon: ScanLine },
 ]
+
+const UNIT_OPTIONS = ['un', 'unid', 'cx', 'pct', 'par']
 
 export function ItemFormModal({ open, onClose, onSubmit, initialData, categories = [] }) {
   const isEdit = Boolean(initialData)
@@ -20,31 +21,34 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
   const [form,      setForm]      = useState({
     name: '', brand: '', barcode: '', defaultUnit: 'un',
     categoryId: '', notes: '', imageUrl: '',
-    qtyType: 'none', qtyValue: '', qtyUnit: 'unid',
+    qtyType: 'none', qtyValue: '', qtyUnit: 'un',
   })
-  const [imageMode, setImageMode] = useState('search')
+  const [imageMode, setImageMode] = useState('upload')
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState('')
 
   useEffect(() => {
     if (open) {
-      const prod   = initialData?.product ?? {}
-      const hasQty = initialData?.qty_value != null || initialData?.qty_unit != null
-      const isUnit = hasQty && ['unid','cx','pct','par'].includes(initialData?.qty_unit)
+      const prod         = initialData?.product ?? {}
+      const defaultUnit  = prod.default_unit ?? initialData?.default_unit ?? 'un'
+      const resolvedUnit = initialData?.qty_unit || defaultUnit
+      const hasQty       = initialData?.qty_value != null
+      const isUnit       = hasQty && UNIT_OPTIONS.includes(resolvedUnit)
+
       setForm({
-        name:        prod.name         ?? '',
-        brand:       prod.brand        ?? '',
-        barcode:     prod.barcode      ?? '',
-        defaultUnit: prod.default_unit ?? 'un',
+        name:        prod.name    ?? initialData?.name    ?? '',
+        brand:       prod.brand   ?? initialData?.brand   ?? '',
+        barcode:     prod.barcode ?? initialData?.barcode ?? '',
+        defaultUnit,
         categoryId:  initialData?.category_id ?? '',
         notes:       initialData?.notes       ?? '',
         imageUrl:    initialData?.image_url   ?? prod.image_url ?? '',
         qtyType:     !hasQty ? 'none' : isUnit ? 'unit' : 'weight',
-        qtyValue:    initialData?.qty_value != null ? String(initialData.qty_value) : '',
-        qtyUnit:     initialData?.qty_unit ?? prod.default_unit ?? 'unid',
+        qtyValue:    hasQty ? String(initialData.qty_value) : '',
+        qtyUnit:     resolvedUnit,
       })
       setError('')
-      setImageMode(initialData?.image_url?.includes('supabase') ? 'upload' : 'search')
+      setImageMode('upload')
     }
   }, [open, initialData])
 
@@ -56,9 +60,25 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
     setForm(prev => ({ ...prev, imageUrl: url ?? '' }))
   }
 
-  function handleModeChange(mode) {
-    setImageMode(mode)
-    setForm(prev => ({ ...prev, imageUrl: '' }))
+  async function handleBarcodeBlur() {
+    const code = form.barcode.trim()
+    if (!code) return
+    const { data: existingProduct } = await supabase
+      .from('products')
+      .select('name, brand, barcode, default_unit, image_url')
+      .eq('barcode', code)
+      .maybeSingle()
+
+    if (existingProduct) {
+      setForm(prev => ({
+        ...prev,
+        name:        prev.name.trim()  ? prev.name  : (existingProduct.name  ?? ''),
+        brand:       prev.brand.trim() ? prev.brand : (existingProduct.brand ?? ''),
+        defaultUnit: existingProduct.default_unit || prev.defaultUnit || 'un',
+        qtyUnit:     prev.qtyUnit || existingProduct.default_unit || 'un',
+        imageUrl:    prev.imageUrl || existingProduct.image_url || '',
+      }))
+    }
   }
 
   async function handleSubmit(e) {
@@ -66,19 +86,21 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
     if (!form.name.trim()) { setError('O nome é obrigatório.'); return }
     setLoading(true)
     try {
-      const quantity = form.qtyType === 'none' ? null : {
-        value: form.qtyValue ? Number(form.qtyValue) : null,
-        unit:  form.qtyUnit || null,
-      }
+      const hasQty      = form.qtyType !== 'none' && form.qtyValue !== ''
+      const qtyValue    = hasQty ? Number(form.qtyValue) : null
+      const defaultUnit = form.defaultUnit || form.qtyUnit || 'un'
+      const qtyUnit     = hasQty ? (form.qtyUnit || defaultUnit) : defaultUnit
+
       await onSubmit({
         name:        form.name.trim(),
-        brand:       form.brand.trim()    || null,
-        barcode:     form.barcode.trim()  || null,
-        defaultUnit: form.defaultUnit     || 'un',
-        categoryId:  form.categoryId      || null,
-        quantity,
-        notes:       form.notes.trim()    || null,
-        imageUrl:    form.imageUrl        || null,
+        brand:       form.brand.trim()   || null,
+        barcode:     form.barcode.trim() || null,
+        defaultUnit,
+        categoryId:  form.categoryId     || null,
+        qty_value:   qtyValue,
+        qty_unit:    qtyUnit,
+        notes:       form.notes.trim()   || null,
+        imageUrl:    form.imageUrl       || null,
       })
       onClose()
     } catch (err) {
@@ -116,6 +138,7 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
             placeholder="Ex: 7891234567890"
             value={form.barcode}
             onChange={set('barcode')}
+            onBlur={handleBarcodeBlur}
             maxLength={30}
             inputMode="numeric"
           />
@@ -149,7 +172,14 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
                 { key: 'weight', label: 'Peso/Vol' },
               ].map(t => (
                 <button key={t.key} type="button"
-                  onClick={() => setForm(p => ({ ...p, qtyType: t.key, qtyValue: '', qtyUnit: t.key === 'unit' ? 'unid' : 'kg' }))}
+                  onClick={() => {
+                    const nextUnit = t.key === 'unit'
+                      ? (UNIT_OPTIONS.includes(form.defaultUnit) ? form.defaultUnit : 'un')
+                      : t.key === 'weight'
+                        ? (!UNIT_OPTIONS.includes(form.defaultUnit) ? form.defaultUnit : 'kg')
+                        : form.defaultUnit
+                    setForm(p => ({ ...p, qtyType: t.key, qtyValue: '', qtyUnit: nextUnit }))
+                  }}
                   className={cn('px-2.5 py-1 rounded-md font-medium transition',
                     form.qtyType === t.key ? 'bg-white shadow text-primary-700' : 'text-gray-500'
                   )}>
@@ -178,8 +208,11 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
                   +
                 </button>
               </div>
-              <select value={form.qtyUnit} onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value }))}
+              <select
+                value={form.qtyUnit}
+                onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value, defaultUnit: e.target.value }))}
                 className="rounded-xl border border-gray-300 bg-white px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500">
+                <option value="un">un.</option>
                 <option value="unid">unid.</option>
                 <option value="cx">cx.</option>
                 <option value="pct">pct.</option>
@@ -195,7 +228,9 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
                 placeholder="Ex: 500"
                 className="flex-1 rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500"
                 inputMode="decimal" />
-              <select value={form.qtyUnit} onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value }))}
+              <select
+                value={form.qtyUnit}
+                onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value, defaultUnit: e.target.value }))}
                 className="rounded-xl border border-gray-300 bg-white px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500">
                 <option value="kg">kg</option>
                 <option value="g">g</option>
@@ -235,7 +270,7 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
                 {IMAGE_MODES.map(m => {
                   const Icon = m.icon
                   return (
-                    <button key={m.key} type="button" onClick={() => handleModeChange(m.key)}
+                    <button key={m.key} type="button" onClick={() => setImageMode(m.key)}
                       className={cn('flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-medium transition',
                         imageMode === m.key ? 'bg-white shadow text-primary-700' : 'text-gray-500 hover:text-gray-700'
                       )}>
@@ -248,23 +283,22 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
             </div>
           </div>
 
-          {imageMode === 'search' ? (
-            <ImagePicker itemName={form.name} value={form.imageUrl} onChange={handleImageChange} />
-          ) : imageMode === 'upload' ? (
+          {imageMode === 'upload' ? (
             <ImageUploader value={form.imageUrl} onChange={handleImageChange} />
           ) : (
             <BarcodeScanner
-              onClose={() => setImageMode('search')}
+              onClose={() => setImageMode('upload')}
               onResult={(product) => {
-                if (product.name && !form.name.trim()) {
-                  setForm(prev => ({ ...prev, name: product.name, imageUrl: product.imageUrl ?? '' }))
-                } else {
-                  setForm(prev => ({ ...prev, imageUrl: product.imageUrl ?? prev.imageUrl }))
-                }
-                if (product.notes && !form.notes.trim()) {
-                  setForm(prev => ({ ...prev, notes: product.notes }))
-                }
-                setImageMode('search')
+                setForm(prev => ({
+                  ...prev,
+                  name:        prev.name.trim()  ? prev.name  : (product.name  || ''),
+                  brand:       prev.brand.trim() ? prev.brand : (product.brand || ''),
+                  barcode:     product.barcode     || prev.barcode,
+                  defaultUnit: product.defaultUnit || prev.defaultUnit || 'un',
+                  qtyUnit:     product.defaultUnit || prev.qtyUnit     || 'un',
+                  imageUrl:    product.imageUrl    || prev.imageUrl,
+                }))
+                setImageMode('upload')
               }}
             />
           )}

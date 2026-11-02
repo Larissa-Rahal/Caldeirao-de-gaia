@@ -50,7 +50,7 @@ export function ImageUploader({ value, onChange }) {
     setError('')
   }
 
-  const displayImage = preview || (value?.includes('supabase') ? value : null)
+  const displayImage = preview || value || null
 
   return (
     <div className="flex flex-col gap-2">

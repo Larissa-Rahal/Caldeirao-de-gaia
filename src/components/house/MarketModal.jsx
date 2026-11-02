@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
-import { ShoppingCart, Check, CheckCheck, Share2 } from 'lucide-react'
+import { Check, CheckCheck, Share2 } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { cn, copyToClipboard } from '@/lib/utils'
 import { getCategoryPlaceholder } from '@/lib/defaults'
@@ -24,7 +24,9 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
       .sort((a, b) => {
         if (a.status === 'out_of_stock' && b.status !== 'out_of_stock') return -1
         if (b.status === 'out_of_stock' && a.status !== 'out_of_stock') return  1
-        return (a.product?.name ?? '').localeCompare(b.product?.name ?? '')
+        const nameA = a.product?.name ?? a.name ?? ''
+        const nameB = b.product?.name ?? b.name ?? ''
+        return nameA.localeCompare(nameB)
       }),
     [items]
   )
@@ -52,7 +54,6 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
         next.delete(itemId)
       } else {
         next.add(itemId)
-        // Repõe automaticamente
         onSetStatus(itemId, 'in_stock')
       }
       return next
@@ -70,10 +71,13 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
     const lines = grouped.flatMap(([, g]) => [
       `\n${g.label}`,
       ...g.items.map(i => {
-        const qty = i.qty_value != null
-          ? ` (${i.qty_value}${i.qty_unit ? ' ' + i.qty_unit : ''})`
+        const name  = i.product?.name  ?? i.name  ?? ''
+        const brand = i.product?.brand ?? i.brand ?? null
+        const unit  = i.qty_unit || i.product?.default_unit || i.default_unit || 'un'
+        const qty   = i.qty_value != null
+          ? ` (${i.qty_value}${unit ? ' ' + unit : ''})`
           : ''
-        return `  ${checked.has(i.id) ? '✅' : '☐'} ${i.product?.name ?? ''}${qty}`
+        return `  ${checked.has(i.id) ? '✅' : '☐'} ${name}${brand ? ` · ${brand}` : ''}${qty}`
       })
     ])
     const text = `🛒 Lista de Compras — Caldeirão de Gaia\n${lines.join('\n')}`
@@ -128,8 +132,11 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
                 </p>
                 <div className="flex flex-col gap-1.5">
                   {group.items.map(item => {
-                    const isChecked = checked.has(item.id)
-                    const placeholder = getCategoryPlaceholder(
+                    const isChecked    = checked.has(item.id)
+                    const productName  = item.product?.name  ?? item.name  ?? ''
+                    const productBrand = item.product?.brand ?? item.brand ?? null
+                    const qtyUnit      = item.qty_unit || item.product?.default_unit || item.default_unit || 'un'
+                    const placeholder  = getCategoryPlaceholder(
                       item.category?.name ?? '', item.category?.emoji ?? '📦'
                     )
                     return (
@@ -155,18 +162,21 @@ export function MarketModal({ open, onClose, items, categories, onSetStatus }) {
 
                         {/* Imagem */}
                         <div className="w-8 h-8 rounded-lg overflow-hidden bg-white border border-gray-100 flex-shrink-0">
-                          <img src={item.image_url || item.product?.image_url || placeholder} alt={item.product?.name ?? ''}
+                          <img src={item.image_url || item.product?.image_url || placeholder} alt={productName}
                             className="w-full h-full object-contain p-0.5" />
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <p className={cn('text-sm font-medium', isChecked && 'line-through text-gray-400')}>
-                            {item.product?.name ?? ''}
+                            {productName}
+                            {productBrand && (
+                              <span className="text-xs font-normal text-gray-400 ml-1.5">· {productBrand}</span>
+                            )}
                           </p>
                           {item.qty_value != null && (
                             <p className="text-xs text-gray-400">
-                              {item.qty_value}{item.qty_unit ? ' ' + item.qty_unit : ''}
+                              {item.qty_value}{qtyUnit ? ' ' + qtyUnit : ''}
                             </p>
                           )}
                         </div>

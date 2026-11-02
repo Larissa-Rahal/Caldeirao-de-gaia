@@ -62,29 +62,32 @@ export function ActivityLog() {
 function ActivityEntry({ entry, actionConfig, statusLabels }) {
   const cfg         = actionConfig[entry.action] ?? actionConfig.item_updated
   const profileName = entry.user?.full_name ?? entry.user?.email?.split('@')[0] ?? 'Alguém'
+  const itemName    = entry.item_name ?? 'item'
 
   function buildDescription() {
     switch (entry.action) {
       case 'item_added':
-        return <span><strong>{profileName}</strong> adicionou <strong>"{entry.item_name}"</strong></span>
+        return <span><strong>{profileName}</strong> adicionou <strong>"{itemName}"</strong></span>
       case 'item_deleted':
-        return <span><strong>{profileName}</strong> removeu <strong>"{entry.item_name}"</strong></span>
+        return <span><strong>{profileName}</strong> removeu <strong>"{itemName}"</strong></span>
       case 'status_changed':
         return (
           <span>
-            <strong>{profileName}</strong> alterou <strong>"{entry.item_name}"</strong>
+            <strong>{profileName}</strong> alterou <strong>"{itemName}"</strong>
             {' '}de <span className="font-medium">{statusLabels[entry.old_value] ?? entry.old_value}</span>
             {' '}para <span className="font-medium">{statusLabels[entry.new_value] ?? entry.new_value}</span>
           </span>
         )
       case 'item_updated':
-        return <span><strong>{profileName}</strong> editou <strong>"{entry.item_name}"</strong></span>
+        return <span><strong>{profileName}</strong> editou <strong>"{itemName}"</strong></span>
+      case 'market_completed':
+        return <span><strong>{profileName}</strong> concluiu a lista de compras</span>
       case 'member_joined':
         return <span><strong>{profileName}</strong> entrou no caldeirão</span>
       case 'member_left':
         return <span><strong>{profileName}</strong> saiu do caldeirão</span>
       default:
-        return <span><strong>{profileName}</strong> fez uma alteração</span>
+        return <span><strong>{profileName}</strong> atualizou <strong>"{itemName}"</strong></span>
     }
   }
 
