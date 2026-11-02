@@ -75,7 +75,12 @@ export function HomePage() {
   }
 
   async function handleEditItem(data) {
-    await updateItem(editItem.id, data)
+    await updateItem(editItem.id, {
+      name:        data.name,
+      category_id: data.categoryId,
+      notes:       data.notes,
+      image_url:   data.imageUrl,
+    })
     toast.success('Item atualizado!')
     setEditItem(null)
   }

@@ -126,6 +126,7 @@ CREATE TABLE IF NOT EXISTS public.items (
   name        TEXT NOT NULL CHECK (char_length(name) BETWEEN 1 AND 80),
   status      public.item_status NOT NULL DEFAULT 'in_stock',
   notes       TEXT CHECK (char_length(notes) <= 200),
+  image_url   TEXT,
   updated_by  UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_by  UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),

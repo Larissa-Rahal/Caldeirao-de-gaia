@@ -65,7 +65,7 @@ export function useItems() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeHouse?.id])
 
-  async function addItem({ name, categoryId, notes }) {
+  async function addItem({ name, categoryId, notes, imageUrl }) {
     const { data, error: err } = await supabase
       .from('items')
       .insert({
@@ -73,6 +73,7 @@ export function useItems() {
         category_id: categoryId ?? null,
         name:        name.trim(),
         notes:       notes?.trim() ?? null,
+        image_url:   imageUrl ?? null,
         status:      'in_stock',
         created_by:  user.id,
         updated_by:  user.id,
