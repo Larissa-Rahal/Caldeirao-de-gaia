@@ -8,8 +8,15 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="EstoqueCasa" />
-    <title>EstoqueCasa</title>
+    <meta name="apple-mobile-web-app-title" content="Caldeirão de Gaia" />
+    <title>Caldeirão de Gaia</title>
+    <!-- Aplica o tema antes do React para evitar flash -->
+    <script>
+      (function() {
+        var t = localStorage.getItem('caldeir�o_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', t);
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />

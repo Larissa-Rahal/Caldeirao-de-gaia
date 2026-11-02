@@ -72,7 +72,8 @@ export function useItems() {
         name:        name.trim(),
         notes:       notes?.trim() ?? null,
         image_url:   imageUrl ?? null,
-        quantity:    quantity ?? null,
+        qty_value:   quantity?.value ?? null,
+        qty_unit:    quantity?.unit  ?? null,
         status:      'in_stock',
         created_by:  user.id,
         updated_by:  user.id,
@@ -98,6 +99,40 @@ export function useItems() {
       .update({ status, updated_by: user.id })
       .eq('id', itemId)
     if (err) throw err
+  }
+
+  /** Incrementa ou decrementa qty_value de um item unitário */
+  async function adjustQuantity(itemId, delta) {
+    // Atualização optimista local
+    setItems(prev => prev.map(i => {
+      if (i.id !== itemId) return i
+      const newVal = Math.max(0, (Number(i.qty_value) || 0) + delta)
+      // Auto-status: 0 → em falta, 1 → acabando, 2+ → em estoque
+      const newStatus = newVal === 0 ? 'out_of_stock' : newVal === 1 ? 'running_low' : 'in_stock'
+      return { ...i, qty_value: newVal, status: newStatus }
+    }))
+
+    const item = items.find(i => i.id === itemId)
+    if (!item) return
+
+    const newVal    = Math.max(0, (Number(item.qty_value) || 0) + delta)
+    const newStatus = newVal === 0 ? 'out_of_stock' : newVal === 1 ? 'running_low' : 'in_stock'
+
+    const { error: err } = await supabase
+      .from('items')
+      .update({ qty_value: newVal, status: newStatus, updated_by: user.id })
+      .eq('id', itemId)
+    if (err) { fetchItems(); throw err }   // reverte se falhar
+  }
+
+  /** Actualiza qty_value directamente (para peso/volume) */
+  async function updateQuantityValue(itemId, value) {
+    setItems(prev => prev.map(i => i.id === itemId ? { ...i, qty_value: value } : i))
+    const { error: err } = await supabase
+      .from('items')
+      .update({ qty_value: value, updated_by: user.id })
+      .eq('id', itemId)
+    if (err) { fetchItems(); throw err }
   }
 
   async function updateItem(itemId, updates) {
@@ -128,6 +163,7 @@ export function useItems() {
   return {
     items, itemsByCategory, loading, error,
     addItem, cycleStatus, setStatus, updateItem, deleteItem,
+    adjustQuantity, updateQuantityValue,
     refetch: fetchItems
   }
 }

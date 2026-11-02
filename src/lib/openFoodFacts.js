@@ -37,7 +37,7 @@ async function fetchOFF(query, lang, limit) {
 
   try {
     const res = await fetch(url, {
-      headers: { 'User-Agent': 'EstoqueCasa/1.0 (https://estoque-casa-five.vercel.app)' },
+      headers: { 'User-Agent': 'CaldeiraoDeGaia/1.0 (https://estoque-casa-five.vercel.app)' },
       signal: AbortSignal.timeout(10000),
     })
     if (!res.ok) return []

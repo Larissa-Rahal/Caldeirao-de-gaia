@@ -9,10 +9,10 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png'],
       manifest: {
-        name: 'EstoqueCasa',
-        short_name: 'EstoqueCasa',
+        name: 'Caldeir„o de Gaia',
+        short_name: 'Caldeir„o de Gaia',
         description: 'Controle de estoque dom√©stico compartilhado',
-        theme_color: '#6366f1',
+        theme_color: '#5B21B6',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',

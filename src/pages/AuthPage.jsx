@@ -66,8 +66,8 @@ export function AuthPage() {
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10">
         {/* Logo */}
         <div className="text-center mb-7">
-          <div className="text-5xl mb-3">🏠</div>
-          <h1 className="text-2xl font-bold text-gray-900">EstoqueCasa</h1>
+          <div className="text-5xl mb-3">🫧</div>
+          <h1 className="text-2xl font-bold text-gray-900">Caldeirão de Gaia</h1>
           <p className="text-sm text-gray-500 mt-1">
             {mode === 'login' ? 'Entra na tua conta' : 'Cria a tua conta'}
           </p>

@@ -1,38 +1,47 @@
 import { useState, useEffect } from 'react'
-import { Search, Upload } from 'lucide-react'
+import { Search, Upload, ScanLine } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { Input } from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import { ImagePicker } from './ImagePicker'
 import { ImageUploader } from './ImageUploader'
+import { BarcodeScanner } from './BarcodeScanner'
 import { cn } from '@/lib/utils'
 
 const IMAGE_MODES = [
-  { key: 'search', label: 'Pesquisar', icon: Search },
-  { key: 'upload', label: 'Carregar',  icon: Upload },
+  { key: 'search',  label: 'Pesquisar', icon: Search },
+  { key: 'upload',  label: 'Carregar',  icon: Upload },
+  { key: 'barcode', label: 'Barcode',   icon: ScanLine },
 ]
 
 export function ItemFormModal({ open, onClose, onSubmit, initialData, categories = [] }) {
   const isEdit = Boolean(initialData)
 
-  const [form,      setForm]      = useState({ name: '', categoryId: '', quantity: '', notes: '', imageUrl: '' })
+  const [form,      setForm]      = useState({
+    name: '', categoryId: '', notes: '', imageUrl: '',
+    qtyType: 'none',   // 'none' | 'unit' | 'weight'
+    qtyValue: '',      // número
+    qtyUnit: 'unid',   // 'unid' | 'kg' | 'g' | 'L' | 'mL' | 'cx' | 'pct'
+  })
   const [imageMode, setImageMode] = useState('search')
   const [loading,   setLoading]   = useState(false)
   const [error,     setError]     = useState('')
 
   useEffect(() => {
     if (open) {
+      const hasQty  = initialData?.qty_value != null || initialData?.qty_unit != null
+      const isUnit  = hasQty && ['unid','cx','pct'].includes(initialData?.qty_unit)
       setForm({
         name:       initialData?.name        ?? '',
         categoryId: initialData?.category_id ?? '',
-        quantity:   initialData?.quantity    ?? '',
         notes:      initialData?.notes       ?? '',
         imageUrl:   initialData?.image_url   ?? '',
+        qtyType:    !hasQty ? 'none' : isUnit ? 'unit' : 'weight',
+        qtyValue:   initialData?.qty_value   != null ? String(initialData.qty_value) : '',
+        qtyUnit:    initialData?.qty_unit    ?? 'unid',
       })
       setError('')
-      setImageMode(
-        initialData?.image_url?.includes('supabase') ? 'upload' : 'search'
-      )
+      setImageMode(initialData?.image_url?.includes('supabase') ? 'upload' : 'search')
     }
   }, [open, initialData])
 
@@ -54,10 +63,14 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
     if (!form.name.trim()) { setError('O nome é obrigatório.'); return }
     setLoading(true)
     try {
+      const quantity = form.qtyType === 'none' ? null : {
+        value: form.qtyValue ? Number(form.qtyValue) : null,
+        unit:  form.qtyUnit  || null,
+      }
       await onSubmit({
         name:       form.name.trim(),
         categoryId: form.categoryId  || null,
-        quantity:   form.quantity.trim() || null,
+        quantity,
         notes:      form.notes.trim() || null,
         imageUrl:   form.imageUrl    || null,
       })
@@ -83,31 +96,115 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
           maxLength={80}
         />
 
-        {/* Categoria + Quantidade na mesma linha */}
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-medium text-gray-700">Categoria</label>
-            <select
-              value={form.categoryId}
-              onChange={set('categoryId')}
-              className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            >
-              <option value="">Sem categoria</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.emoji} {cat.name}
-                </option>
+        {/* Categoria */}
+        <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-700">Categoria</label>
+          <select
+            value={form.categoryId}
+            onChange={set('categoryId')}
+            className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="">Sem categoria</option>
+            {categories.map(cat => (
+              <option key={cat.id} value={cat.id}>
+                {cat.emoji} {cat.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* ── Quantidade inteligente ── */}
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between">
+            <label className="text-sm font-medium text-gray-700">Quantidade</label>
+            {/* Toggle de tipo */}
+            <div className="flex rounded-lg bg-gray-100 p-0.5 text-xs">
+              {[
+                { key: 'none',   label: 'Nenhuma' },
+                { key: 'unit',   label: 'Unidades' },
+                { key: 'weight', label: 'Peso/Vol' },
+              ].map(t => (
+                <button key={t.key} type="button"
+                  onClick={() => setForm(p => ({ ...p, qtyType: t.key, qtyValue: '', qtyUnit: t.key === 'unit' ? 'unid' : 'kg' }))}
+                  className={cn(
+                    'px-2.5 py-1 rounded-md font-medium transition',
+                    form.qtyType === t.key ? 'bg-white shadow text-primary-700' : 'text-gray-500'
+                  )}
+                >
+                  {t.label}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
-          <Input
-            label="Quantidade"
-            placeholder="Ex: 2 kg, 1 L..."
-            value={form.quantity}
-            onChange={set('quantity')}
-            maxLength={30}
-          />
+          {/* Input de unidades — número inteiro */}
+          {form.qtyType === 'unit' && (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 flex-1 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+                <button type="button"
+                  onClick={() => setForm(p => ({ ...p, qtyValue: String(Math.max(0, (Number(p.qtyValue) || 0) - 1)) }))}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-red-600 hover:border-red-200 transition font-bold text-base">
+                  −
+                </button>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={form.qtyValue}
+                  onChange={e => setForm(p => ({ ...p, qtyValue: e.target.value }))}
+                  placeholder="0"
+                  className="flex-1 text-center text-lg font-semibold bg-transparent outline-none text-gray-900 w-16"
+                  inputMode="numeric"
+                />
+                <button type="button"
+                  onClick={() => setForm(p => ({ ...p, qtyValue: String((Number(p.qtyValue) || 0) + 1) }))}
+                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-white border border-gray-200 text-gray-600 hover:text-green-600 hover:border-green-200 transition font-bold text-base">
+                  +
+                </button>
+              </div>
+              <select
+                value={form.qtyUnit}
+                onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value }))}
+                className="rounded-xl border border-gray-300 bg-white px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="unid">unid.</option>
+                <option value="cx">cx.</option>
+                <option value="pct">pct.</option>
+                <option value="par">par</option>
+              </select>
+            </div>
+          )}
+
+          {/* Input de peso/volume — número decimal + unidade */}
+          {form.qtyType === 'weight' && (
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={form.qtyValue}
+                onChange={e => setForm(p => ({ ...p, qtyValue: e.target.value }))}
+                placeholder="Ex: 500"
+                className="flex-1 rounded-xl border border-gray-300 bg-white px-3.5 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500"
+                inputMode="decimal"
+              />
+              <select
+                value={form.qtyUnit}
+                onChange={e => setForm(p => ({ ...p, qtyUnit: e.target.value }))}
+                className="rounded-xl border border-gray-300 bg-white px-2 py-2.5 text-sm outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="kg">kg</option>
+                <option value="g">g</option>
+                <option value="L">L</option>
+                <option value="mL">mL</option>
+                <option value="mg">mg</option>
+              </select>
+            </div>
+          )}
+
+          {form.qtyType === 'none' && (
+            <p className="text-xs text-gray-400">Sem controlo de quantidade.</p>
+          )}
         </div>
 
         <Input
@@ -163,10 +260,25 @@ export function ItemFormModal({ open, onClose, onSubmit, initialData, categories
               value={form.imageUrl}
               onChange={handleImageChange}
             />
-          ) : (
+          ) : imageMode === 'upload' ? (
             <ImageUploader
               value={form.imageUrl}
               onChange={handleImageChange}
+            />
+          ) : (
+            <BarcodeScanner
+              onClose={() => setImageMode('search')}
+              onResult={(product) => {
+                if (product.name && !form.name.trim()) {
+                  setForm(prev => ({ ...prev, name: product.name, imageUrl: product.imageUrl ?? '' }))
+                } else {
+                  setForm(prev => ({ ...prev, imageUrl: product.imageUrl ?? prev.imageUrl }))
+                }
+                if (product.notes && !form.notes.trim()) {
+                  setForm(prev => ({ ...prev, notes: product.notes }))
+                }
+                setImageMode('search')
+              }}
             />
           )}
         </div>

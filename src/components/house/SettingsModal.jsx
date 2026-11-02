@@ -8,6 +8,7 @@ import { useHouse } from '@/contexts/HouseContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { copyToClipboard } from '@/lib/utils'
 import { buildInviteUrl } from '@/lib/defaults'
+import { ActivityLog } from './ActivityLog'
 import toast from 'react-hot-toast'
 
 export function SettingsModal({ open, onClose, categories = [], addCategory, deleteCategory }) {
@@ -117,17 +118,18 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
     { key: 'invite',     label: 'Convite' },
     { key: 'members',    label: `Membros (${members.length})` },
     { key: 'categories', label: 'Categorias' },
+    { key: 'log',        label: 'Histórico' },
   ]
 
   return (
     <Modal open={open} onClose={onClose} title={`Definições · ${activeHouse.name}`}>
-      {/* Tabs */}
-      <div className="flex rounded-xl bg-gray-100 p-1 mb-5 -mx-1">
+      {/* Tabs — scroll horizontal se necessário */}
+      <div className="flex gap-1 overflow-x-auto scrollbar-hide bg-gray-100 rounded-xl p-1 mb-5 -mx-1">
         {TABS.map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-medium transition ${
+            className={`flex-shrink-0 flex-1 min-w-fit py-1.5 px-2 rounded-lg text-xs font-medium transition whitespace-nowrap ${
               tab === t.key ? 'bg-white shadow text-primary-700' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -269,6 +271,12 @@ export function SettingsModal({ open, onClose, categories = [], addCategory, del
             />
             <Button type="submit" size="md" disabled={!newCatName.trim()}>+</Button>
           </form>
+        </div>
+      )}
+      {/* ── Histórico ── */}
+      {tab === 'log' && (
+        <div className="max-h-[60vh] overflow-y-auto -mx-5 px-5">
+          <ActivityLog />
         </div>
       )}
     </Modal>

@@ -1,9 +1,10 @@
 import { useState, useMemo } from 'react'
-import { Plus, Search, RefreshCw } from 'lucide-react'
+import { Plus, Search, RefreshCw, LayoutGrid, List, ShoppingCart } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { ItemCard } from '@/components/items/ItemCard'
 import { ItemFormModal } from '@/components/items/ItemFormModal'
 import { Button } from '@/components/ui/Button'
+import { MarketModal } from '@/components/house/MarketModal'
 import { useItems } from '@/hooks/useItems'
 import { useCategories } from '@/hooks/useCategories'
 import { useHouse } from '@/contexts/HouseContext'
@@ -14,19 +15,28 @@ import { CreateHouseModal } from '@/components/house/CreateHouseModal'
 import { SettingsModal } from '@/components/house/SettingsModal'
 
 const STATUS_FILTERS = ['all', 'in_stock', 'running_low', 'out_of_stock']
+const VIEW_KEY = 'caldeirão_view'
 
 export function HomePage() {
   const { activeHouse } = useHouse()
-  const { items, loading, cycleStatus, addItem, updateItem, deleteItem } = useItems()
+  const { items, loading, cycleStatus, setStatus, addItem, updateItem, deleteItem, adjustQuantity, updateQuantityValue } = useItems()
   const { categories, addCategory, deleteCategory } = useCategories()
 
   const [search,          setSearch]          = useState('')
   const [statusFilter,    setStatusFilter]    = useState('all')
   const [categoryFilter,  setCategoryFilter]  = useState('all')
+  const [viewMode,        setViewMode]        = useState(() => localStorage.getItem(VIEW_KEY) ?? 'grid')
   const [addOpen,         setAddOpen]         = useState(false)
   const [editItem,        setEditItem]        = useState(null)
   const [createHouseOpen, setCreateHouseOpen] = useState(false)
   const [settingsOpen,    setSettingsOpen]    = useState(false)
+  const [marketOpen,      setMarketOpen]      = useState(false)
+
+  function toggleView() {
+    const next = viewMode === 'grid' ? 'compact' : 'grid'
+    setViewMode(next)
+    localStorage.setItem(VIEW_KEY, next)
+  }
 
   // Filtragem combinada
   const filtered = useMemo(() => {
@@ -38,7 +48,7 @@ export function HomePage() {
     })
   }, [items, search, statusFilter, categoryFilter])
 
-  // Agrupamento por categoria (ordenado por sort_order)
+  // Agrupamento por categoria
   const grouped = useMemo(() => {
     const map = {}
     filtered.forEach(item => {
@@ -64,8 +74,15 @@ export function HomePage() {
     out_of_stock: items.filter(i => i.status === 'out_of_stock').length,
   }), [items])
 
+  const needsMarket = counts.running_low + counts.out_of_stock
+
   async function handleCycleStatus(itemId, currentStatus) {
     try { await cycleStatus(itemId, currentStatus) }
+    catch { toast.error('Erro ao atualizar estado.') }
+  }
+
+  async function handleSetStatus(itemId, status) {
+    try { await setStatus(itemId, status) }
     catch { toast.error('Erro ao atualizar estado.') }
   }
 
@@ -78,7 +95,8 @@ export function HomePage() {
     await updateItem(editItem.id, {
       name:        data.name,
       category_id: data.categoryId,
-      quantity:    data.quantity,
+      qty_value:   data.quantity?.value ?? null,
+      qty_unit:    data.quantity?.unit  ?? null,
       notes:       data.notes,
       image_url:   data.imageUrl,
     })
@@ -101,17 +119,49 @@ export function HomePage() {
 
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 pb-24">
 
-        {/* ── Barra de pesquisa ── */}
-        <div className="relative mb-4">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          <input
-            type="search"
-            placeholder="Pesquisar itens..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none
-                       focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition"
-          />
+        {/* ── Barra de pesquisa + toggle de vista ── */}
+        <div className="flex gap-2 mb-4">
+          <div className="relative flex-1">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <input
+              type="search"
+              placeholder="Pesquisar itens..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none
+                         focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition"
+            />
+          </div>
+
+          {/* Toggle Grid / Lista */}
+          <button
+            onClick={toggleView}
+            title={viewMode === 'grid' ? 'Mudar para lista' : 'Mudar para grelha'}
+            aria-label={viewMode === 'grid' ? 'Vista em lista' : 'Vista em grelha'}
+            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition flex-shrink-0"
+          >
+            {viewMode === 'grid' ? <List size={18} /> : <LayoutGrid size={18} />}
+          </button>
+
+          {/* Botão Modo Mercado — com badge se há itens */}
+          <button
+            onClick={() => setMarketOpen(true)}
+            title="Modo Mercado"
+            aria-label="Abrir lista de compras"
+            className={cn(
+              'relative px-3 py-2.5 rounded-xl border transition flex-shrink-0',
+              needsMarket > 0
+                ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
+            )}
+          >
+            <ShoppingCart size={18} />
+            {needsMarket > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                {needsMarket > 9 ? '9+' : needsMarket}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* ── Filtros de status ── */}
@@ -189,16 +239,15 @@ export function HomePage() {
 
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
-            <span className="text-5xl">📦</span>
+            <span className="text-5xl">🫧</span>
             <p className="text-sm">
               {items.length === 0
-                ? 'Ainda não há itens. Adiciona o primeiro!'
+                ? 'O caldeirão está vazio. Adiciona o primeiro ingrediente!'
                 : 'Nenhum item corresponde aos filtros.'}
             </p>
           </div>
 
         ) : (
-          /* Grid: 1 coluna em mobile, 2 em tablet, 3 em desktop */
           <div className="flex flex-col gap-6">
             {grouped.map(([key, group]) => (
               <section key={key} aria-labelledby={`cat-${key}`}>
@@ -212,18 +261,39 @@ export function HomePage() {
                   </span>
                 </h2>
 
-                {/* Grid responsivo de cartões */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {group.items.map(item => (
-                    <ItemCard
-                      key={item.id}
-                      item={item}
-                      onCycleStatus={handleCycleStatus}
-                      onEdit={setEditItem}
-                      onDelete={handleDeleteItem}
-                    />
-                  ))}
-                </div>
+                  {viewMode === 'grid' ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    {group.items.map(item => (
+                      <ItemCard
+                        key={item.id}
+                        item={item}
+                        viewMode="grid"
+                        onCycleStatus={handleCycleStatus}
+                        onSetStatus={handleSetStatus}
+                        onAdjustQty={adjustQuantity}
+                        onUpdateQtyValue={updateQuantityValue}
+                        onEdit={setEditItem}
+                        onDelete={handleDeleteItem}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-1.5">
+                    {group.items.map(item => (
+                      <ItemCard
+                        key={item.id}
+                        item={item}
+                        viewMode="compact"
+                        onCycleStatus={handleCycleStatus}
+                        onSetStatus={handleSetStatus}
+                        onAdjustQty={adjustQuantity}
+                        onUpdateQtyValue={updateQuantityValue}
+                        onEdit={setEditItem}
+                        onDelete={handleDeleteItem}
+                      />
+                    ))}
+                  </div>
+                )}
               </section>
             ))}
           </div>
@@ -267,6 +337,13 @@ export function HomePage() {
         categories={categories}
         addCategory={addCategory}
         deleteCategory={deleteCategory}
+      />
+      <MarketModal
+        open={marketOpen}
+        onClose={() => setMarketOpen(false)}
+        items={items}
+        categories={categories}
+        onSetStatus={handleSetStatus}
       />
     </div>
   )

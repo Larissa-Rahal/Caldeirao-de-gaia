@@ -8,13 +8,12 @@ import toast from 'react-hot-toast'
 
 export function OnboardingPage() {
   const { createHouse, joinHouse } = useHouse()
-  const [tab,     setTab]     = useState('create')  // 'create' | 'join'
+  const [tab,     setTab]     = useState('create')
   const [name,    setName]    = useState('')
   const [code,    setCode]    = useState('')
   const [loading, setLoading] = useState(false)
   const [error,   setError]   = useState('')
 
-  // Preenche automaticamente o código de convite da URL
   useEffect(() => {
     const inv = getInviteCodeFromUrl()
     if (inv) { setCode(inv.toUpperCase()); setTab('join') }
@@ -22,11 +21,11 @@ export function OnboardingPage() {
 
   async function handleCreate(e) {
     e.preventDefault()
-    if (!name.trim()) { setError('Dá um nome à tua casa.'); return }
+    if (!name.trim()) { setError('Da um nome ao teu caldeirão.'); return }
     setLoading(true)
     try {
       await createHouse(name.trim())
-      toast.success(`Casa "${name.trim()}" criada!`)
+      toast.success(`Caldeirão "${name.trim()}" criado!`)
     } catch (err) {
       toast.error(err.message)
     } finally {
@@ -41,7 +40,7 @@ export function OnboardingPage() {
     try {
       const res = await joinHouse(code.trim())
       clearInviteFromUrl()
-      toast.success(res.already_member ? 'Já és membro desta casa!' : 'Adicionado à casa com sucesso!')
+      toast.success(res.already_member ? 'Já és membro deste caldeirão!' : 'Adicionado ao caldeirão com sucesso!')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -53,9 +52,9 @@ export function OnboardingPage() {
     <div className="min-h-dvh bg-gradient-to-br from-primary-600 to-primary-800 flex flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-2xl p-8 sm:p-10">
         <div className="text-center mb-6">
-          <div className="text-5xl mb-3">🏠</div>
-          <h1 className="text-xl font-bold text-gray-900">Bem-vindo ao EstoqueCasa!</h1>
-          <p className="text-sm text-gray-500 mt-1">Começa por criar ou juntar-te a uma casa.</p>
+          <div className="text-5xl mb-3">🫧</div>
+          <h1 className="text-xl font-bold text-gray-900">Bem-vindo ao Caldeirão de Gaia!</h1>
+          <p className="text-sm text-gray-500 mt-1">Começa por criar ou juntar-te a um caldeirão.</p>
         </div>
 
         {/* Tabs */}
@@ -66,7 +65,7 @@ export function OnboardingPage() {
               tab === 'create' ? 'bg-white shadow text-primary-700' : 'text-gray-500 hover:text-gray-700'
             }`}
           >
-            <Home size={14} /> Criar casa
+            <Home size={14} /> Criar caldeirão
           </button>
           <button
             onClick={() => { setTab('join'); setError('') }}
@@ -81,8 +80,8 @@ export function OnboardingPage() {
         {tab === 'create' ? (
           <form onSubmit={handleCreate} className="flex flex-col gap-4">
             <Input
-              label="Nome da casa"
-              placeholder="Ex: Casa da Família Silva"
+              label="Nome do caldeirão"
+              placeholder="Ex: Caldeirão da Família Silva"
               value={name}
               onChange={e => { setName(e.target.value); setError('') }}
               error={error}
@@ -90,7 +89,7 @@ export function OnboardingPage() {
               autoFocus
             />
             <Button type="submit" loading={loading} size="lg" className="w-full gap-2">
-              Criar casa <ArrowRight size={16} />
+              Criar caldeirão <ArrowRight size={16} />
             </Button>
           </form>
         ) : (
@@ -106,7 +105,7 @@ export function OnboardingPage() {
               autoFocus
             />
             <Button type="submit" loading={loading} size="lg" className="w-full gap-2">
-              Entrar na casa <ArrowRight size={16} />
+              Entrar no caldeirão <ArrowRight size={16} />
             </Button>
           </form>
         )}

@@ -5,7 +5,7 @@ import { DEFAULT_CATEGORIES } from '@/lib/defaults'
 
 const HouseContext = createContext(null)
 
-const ACTIVE_HOUSE_KEY = 'estoquecasa_active_house'
+const ACTIVE_HOUSE_KEY = 'caldeirão_active_house'
 
 export function HouseProvider({ children }) {
   const { user } = useAuth()
