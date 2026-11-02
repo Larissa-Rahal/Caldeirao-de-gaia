@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react'
-import { Plus, Search, RefreshCw, LayoutGrid, List, ShoppingCart, Filter, ChevronDown, Check, X } from 'lucide-react'
+import { Search, RefreshCw, LayoutGrid, List, X } from 'lucide-react'
 import { Header } from '@/components/layout/Header'
 import { ItemCard } from '@/components/items/ItemCard'
 import { ItemFormModal } from '@/components/items/ItemFormModal'
-import { Button } from '@/components/ui/Button'
 import { MarketModal } from '@/components/house/MarketModal'
+import { CauldronEmblem, StatusGem, CornerVine, AddOrbButton } from '@/components/ui/GrimoireOrnaments'
 import { useItems } from '@/hooks/useItems'
 import { useCategories } from '@/hooks/useCategories'
 import { STATUS_CONFIG } from '@/lib/defaults'
@@ -22,9 +22,9 @@ export function HomePage() {
   const { categories, addCategory, deleteCategory } = useCategories()
 
   const [search,          setSearch]          = useState('')
+  const [searchOpen,      setSearchOpen]      = useState(false)
   const [statusFilter,    setStatusFilter]    = useState('all')
   const [categoryFilter,  setCategoryFilter]  = useState('all')
-  const [catMenuOpen,     setCatMenuOpen]     = useState(false)
   const [viewMode,        setViewMode]        = useState(() => localStorage.getItem(VIEW_KEY) ?? 'grid')
   const [addOpen,         setAddOpen]         = useState(false)
   const [editItem,        setEditItem]        = useState(null)
@@ -79,11 +79,6 @@ export function HomePage() {
     out_of_stock: items.filter(i => i.status === 'out_of_stock').length,
   }), [items])
 
-  const selectedCategory = useMemo(
-    () => categories.find(c => c.id === categoryFilter) ?? null,
-    [categories, categoryFilter]
-  )
-
   const needsMarket = counts.running_low + counts.out_of_stock
 
   async function handleCycleStatus(itemId, currentStatus) {
@@ -98,7 +93,7 @@ export function HomePage() {
 
   async function handleAddItem(data) {
     await addItem(data)
-    toast.success('Item adicionado!')
+    toast.success('Item adicionado ao caldeirão!')
   }
 
   async function handleEditItem(data) {
@@ -118,270 +113,271 @@ export function HomePage() {
   }
 
   async function handleDeleteItem(itemId) {
-    if (!confirm('Excluir este item?')) return
+    if (!confirm('Excluir este item do caldeirão?')) return
     try { await deleteItem(itemId); toast.success('Item excluído.') }
     catch { toast.error('Erro ao excluir.') }
   }
 
   return (
-    <div className="min-h-dvh bg-gray-50 flex flex-col">
+    <div className="grimoire-shell min-h-dvh flex flex-col relative overflow-x-hidden">
       <Header
         onCreateHouse={() => setCreateHouseOpen(true)}
         onJoinHouse={() => setJoinHouseOpen(true)}
         onOpenSettings={() => setSettingsOpen(true)}
+        onOpenMarket={() => setMarketOpen(true)}
+        needsMarket={needsMarket}
       />
 
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 pb-24">
+      {/* Moldura Mística de Livro de Feitiços / Alquimia */}
+      <div className="flex-1 w-full max-w-7xl mx-auto px-2 sm:px-5 py-3 sm:py-5 pb-28">
+        <div className="grimoire-frame relative rounded-3xl border-2 border-[#C59B27]/65 p-4 sm:p-7 min-h-[calc(100dvh-5.5rem)]">
 
-        <div className="flex gap-2 mb-4">
-          <div className="relative flex-1">
-            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-            <input
-              type="search"
-              placeholder="Buscar itens..."
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm outline-none
-                         focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition"
-            />
-          </div>
+          {/* Ornamentos de Trepadeiras, Folhas, Lua e Estrelas nos 4 Cantos */}
+          <CornerVine position="top-left"     className="w-24 h-24 sm:w-36 sm:h-36 absolute top-0 left-0 z-0 opacity-90" />
+          <CornerVine position="top-right"    className="w-24 h-24 sm:w-36 sm:h-36 absolute top-0 right-0 z-0 opacity-90" />
+          <CornerVine position="bottom-left"  className="w-24 h-24 sm:w-36 sm:h-36 absolute bottom-0 left-0 z-0 opacity-80" />
+          <CornerVine position="bottom-right" className="w-24 h-24 sm:w-36 sm:h-36 absolute bottom-0 right-0 z-0 opacity-80" />
 
-          <button
-            onClick={toggleView}
-            title={viewMode === 'grid' ? 'Mudar para lista' : 'Mudar para grade'}
-            aria-label={viewMode === 'grid' ? 'Vista em lista' : 'Vista em grade'}
-            className="px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition flex-shrink-0"
-          >
-            {viewMode === 'grid' ? <List size={18} /> : <LayoutGrid size={18} />}
-          </button>
+          {/* ── CABEÇALHO DO GRIMÓRIO: Caldeirão + Título Dourado + Barra de Gemas ── */}
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-5 mb-5 border-b border-[#C59B27]/25">
 
-          <button
-            onClick={() => setMarketOpen(true)}
-            title="Modo Mercado"
-            aria-label="Abrir lista de compras"
-            className={cn(
-              'relative px-3 py-2.5 rounded-xl border transition flex-shrink-0',
-              needsMarket > 0
-                ? 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                : 'border-gray-200 bg-white text-gray-500 hover:bg-gray-50'
-            )}
-          >
-            <ShoppingCart size={18} />
-            {needsMarket > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                {needsMarket > 9 ? '9+' : needsMarket}
-              </span>
-            )}
-          </button>
-        </div>
+            {/* Emblema do Caldeirão + Título */}
+            <div className="flex items-center gap-3 sm:gap-4 pl-2 sm:pl-6">
+              <CauldronEmblem className="w-20 h-20 sm:w-28 sm:h-28 flex-shrink-0 -my-2 drop-shadow-[0_8px_16px_rgba(0,0,0,0.65)]" />
+              <div>
+                <h1 className="grimoire-title font-serif font-extrabold text-2xl sm:text-4xl tracking-wide leading-tight select-none">
+                  Caldeirão<br className="hidden sm:inline" /> de Gaia
+                </h1>
+                <p className="text-xs text-[#A89BC2] mt-0.5 hidden sm:block">
+                  Grimório &amp; Inventário Alquímico da Casa
+                </p>
+              </div>
+            </div>
 
-        <div className="flex items-center justify-between gap-2 mb-5">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-0.5 min-w-0">
-            {STATUS_FILTERS.map(s => {
-              const cfg    = STATUS_CONFIG[s]
-              const active = statusFilter === s
-              return (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  aria-pressed={active}
-                  className={cn(
-                    'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors',
-                    active
-                      ? s === 'all'
-                        ? 'bg-gray-900 text-white'
-                        : cn(cfg?.bg, cfg?.text, 'border', cfg?.border)
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                  )}
-                >
-                  {s === 'all' ? 'Todos' : cfg?.label}
-                  <span className={cn(
-                    'min-w-[18px] text-center px-1 py-0.5 rounded-full text-xs font-semibold',
-                    active && s !== 'all' ? cfg?.text : 'text-gray-400'
-                  )}>
-                    {counts[s]}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
+            {/* Barra de Gemas de Status + Busca + Seletor de Vista (GRADE / LISTA) */}
+            <div className="flex flex-col items-stretch lg:items-end gap-3 pr-1 sm:pr-4">
 
-          {categories.length > 0 && (
-            <div className="relative flex-shrink-0">
-              <div className="flex items-center">
+              {/* Cápsula Dourada de Status com Gemas Mágicas */}
+              <div className="grimoire-statusbar relative flex items-center flex-wrap sm:flex-nowrap gap-1.5 sm:gap-3 px-3.5 sm:px-5 py-2 rounded-full border-2 border-[#C59B27]/80">
+                {STATUS_FILTERS.map(s => {
+                  const cfg    = STATUS_CONFIG[s]
+                  const active = statusFilter === s
+                  return (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setStatusFilter(s)}
+                      aria-pressed={active}
+                      className={cn(
+                        'grimoire-status-btn flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs sm:text-sm font-serif font-bold transition-all whitespace-nowrap',
+                        active
+                          ? 'grimoire-status-btn-active ring-1 ring-[#E5B842]'
+                          : 'hover:opacity-90'
+                      )}
+                    >
+                      {s !== 'all' && <StatusGem status={s} size={16} />}
+                      <span>{s === 'all' ? 'Todos' : cfg?.label}</span>
+                      <span className="grimoire-count font-sans text-xs font-bold ml-0.5">
+                        {counts[s]}
+                      </span>
+                    </button>
+                  )
+                })}
+
+                {/* Botão Lupa Dourada integrado na moldura */}
                 <button
                   type="button"
-                  onClick={() => setCatMenuOpen(v => !v)}
-                  aria-expanded={catMenuOpen}
+                  onClick={() => setSearchOpen(v => !v)}
+                  title="Buscar ingrediente"
                   className={cn(
-                    'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors border',
-                    selectedCategory
-                      ? 'bg-primary-600 text-white border-primary-600 pr-2'
-                      : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                    'ml-auto sm:ml-1 p-1.5 rounded-full border transition',
+                    search || searchOpen
+                      ? 'bg-[#C59B27] text-[#1A1028] border-[#FDE68A]'
+                      : 'bg-[#241638] text-[#E5B842] border-[#C59B27]/60 hover:border-[#FDE68A]'
                   )}
                 >
-                  <Filter size={13} />
-                  <span className="max-w-[120px] truncate">
-                    {selectedCategory
-                      ? `${selectedCategory.emoji} ${selectedCategory.name}`
-                      : 'Categorias'}
-                  </span>
-                  {selectedCategory ? (
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      onClick={e => {
-                        e.stopPropagation()
-                        setCategoryFilter('all')
-                        setCatMenuOpen(false)
-                      }}
-                      onKeyDown={e => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.stopPropagation()
-                          setCategoryFilter('all')
-                          setCatMenuOpen(false)
-                        }
-                      }}
-                      className="ml-0.5 p-0.5 rounded-full hover:bg-white/20 transition"
-                      title="Limpar filtro de categoria"
-                    >
-                      <X size={12} />
-                    </span>
-                  ) : (
-                    <ChevronDown size={13} className={cn('transition-transform', catMenuOpen && 'rotate-180')} />
-                  )}
+                  <Search size={14} />
                 </button>
               </div>
 
-              {catMenuOpen && (
-                <>
-                  <div
-                    className="fixed inset-0 z-30"
-                    onClick={() => setCatMenuOpen(false)}
-                    aria-hidden="true"
-                  />
-                  <div className="absolute right-0 top-full mt-2 z-40 w-56 rounded-2xl shadow-xl border border-gray-100 py-1.5 max-h-72 overflow-y-auto">
-                    <button
-                      type="button"
-                      onClick={() => { setCategoryFilter('all'); setCatMenuOpen(false) }}
-                      className={cn(
-                        'w-full flex items-center justify-between px-3.5 py-2 text-xs font-medium transition hover:bg-gray-50',
-                        categoryFilter === 'all' ? 'text-primary-700 font-semibold' : 'text-gray-700'
-                      )}
-                    >
-                      <span>Todas as categorias</span>
-                      {categoryFilter === 'all' && <Check size={14} className="text-primary-700" />}
-                    </button>
-
-                    <div className="border-t border-gray-100 my-1" />
-
-                    {categories.map(cat => {
-                      const active = categoryFilter === cat.id
-                      return (
-                        <button
-                          key={cat.id}
-                          type="button"
-                          onClick={() => { setCategoryFilter(cat.id); setCatMenuOpen(false) }}
-                          className={cn(
-                            'w-full flex items-center justify-between gap-2 px-3.5 py-2 text-xs font-medium transition hover:bg-gray-50',
-                            active ? 'text-primary-700 font-semibold' : 'text-gray-700'
-                          )}
-                        >
-                          <span className="flex items-center gap-2 truncate">
-                            <span>{cat.emoji}</span>
-                            <span className="truncate">{cat.name}</span>
-                          </span>
-                          {active && <Check size={14} className="text-primary-700 flex-shrink-0" />}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
-        </div>
-
-        {loading ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
-            <RefreshCw size={24} className="animate-spin" />
-            <p className="text-sm">Carregando itens...</p>
-          </div>
-
-        ) : filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
-            <span className="text-5xl">🫧</span>
-            <p className="text-sm">
-              {items.length === 0
-                ? 'O caldeirão está vazio. Adicione o primeiro ingrediente!'
-                : 'Nenhum item corresponde aos filtros.'}
-            </p>
-          </div>
-
-        ) : (
-          <div className="flex flex-col gap-6">
-            {grouped.map(([key, group]) => (
-              <section key={key} aria-labelledby={`cat-${key}`}>
-                <h2
-                  id={`cat-${key}`}
-                  className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2.5 px-1"
-                >
-                  {group.label}
-                  <span className="ml-1.5 text-gray-400 font-normal normal-case">
-                    ({group.items.length})
-                  </span>
-                </h2>
-
-                {viewMode === 'grid' ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                    {group.items.map(item => (
-                      <ItemCard
-                        key={item.id}
-                        item={item}
-                        viewMode="grid"
-                        onCycleStatus={handleCycleStatus}
-                        onSetStatus={handleSetStatus}
-                        onAdjustQty={adjustQty}
-                        onUpdateQtyValue={updateQtyValue}
-                        onEdit={setEditItem}
-                        onDelete={handleDeleteItem}
-                      />
-                    ))}
+              {/* Linha secundária: Campo de Busca (expansível ou ativo) + Botão GRADE / LISTA */}
+              <div className="flex items-center justify-between lg:justify-end gap-3 w-full">
+                {(searchOpen || search) ? (
+                  <div className="relative flex-1 max-w-xs">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#E5B842] pointer-events-none" />
+                    <input
+                      type="search"
+                      placeholder="Buscar ingrediente, marca..."
+                      value={search}
+                      onChange={e => setSearch(e.target.value)}
+                      autoFocus
+                      className="w-full pl-8 pr-7 py-1.5 rounded-full border border-[#C59B27]/70 bg-[#150D24] text-xs sm:text-sm text-[#FFF3D1] outline-none focus:ring-2 focus:ring-[#E5B842]"
+                    />
+                    {search && (
+                      <button
+                        type="button"
+                        onClick={() => setSearch('')}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#A89BC2] hover:text-white"
+                      >
+                        <X size={13} />
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <div className="flex flex-col gap-1.5">
-                    {group.items.map(item => (
-                      <ItemCard
-                        key={item.id}
-                        item={item}
-                        viewMode="compact"
-                        onCycleStatus={handleCycleStatus}
-                        onSetStatus={handleSetStatus}
-                        onAdjustQty={adjustQty}
-                        onUpdateQtyValue={updateQtyValue}
-                        onEdit={setEditItem}
-                        onDelete={handleDeleteItem}
-                      />
-                    ))}
-                  </div>
+                  <div />
                 )}
-              </section>
-            ))}
-          </div>
-        )}
-      </main>
 
-      {/* FAB — Adicionar item */}
-      <div className="fixed bottom-6 right-4 sm:right-6 z-20">
-        <Button
-          onClick={() => setAddOpen(true)}
-          size="lg"
-          className="rounded-2xl shadow-lg shadow-primary-500/30 gap-2 pr-5"
-          aria-label="Adicionar item"
-        >
-          <Plus size={20} />
-          Adicionar
-        </Button>
+                <button
+                  type="button"
+                  onClick={toggleView}
+                  title={viewMode === 'grid' ? 'Mudar para lista compacta' : 'Mudar para cartas em grade'}
+                  className="flex items-center gap-1.5 px-3 py-1 rounded-lg border border-[#C59B27]/50 bg-[#1A1028]/80 hover:border-[#E5B842] text-[#E5B842] font-serif font-bold text-xs tracking-widest uppercase transition"
+                >
+                  {viewMode === 'grid' ? <LayoutGrid size={14} /> : <List size={14} />}
+                  <span>{viewMode === 'grid' ? 'GRADE' : 'LISTA'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* ── CORPO DO GRIMÓRIO: Painel Lateral ("Seções do Caldeirão") + Grade de Cartas ── */}
+          <div className="relative z-10 flex flex-col lg:flex-row gap-6">
+
+            {/* Painel de Navegação Lateral — "Seções do Caldeirão" (fixo ao rolar no desktop) */}
+            {categories.length > 0 && (
+              <aside className="lg:w-56 flex-shrink-0 flex flex-col lg:sticky lg:top-20 lg:self-start">
+                <h2 className="grimoire-section-heading font-serif font-bold text-sm sm:text-base tracking-wide mb-3 px-1 lg:text-center">
+                  Seções do Caldeirão
+                </h2>
+
+                {/* Lista de Medalhões (Horizontal no mobile, Vertical no desktop) */}
+                <div className="flex lg:flex-col gap-2.5 overflow-x-auto scrollbar-hide pb-2 lg:pb-0">
+                  <CategoryMedallion
+                    emoji="✨"
+                    name="Todas"
+                    active={categoryFilter === 'all'}
+                    onClick={() => setCategoryFilter('all')}
+                  />
+                  {categories.map(cat => (
+                    <CategoryMedallion
+                      key={cat.id}
+                      emoji={cat.emoji}
+                      name={cat.name}
+                      active={categoryFilter === cat.id}
+                      onClick={() => setCategoryFilter(cat.id)}
+                    />
+                  ))}
+                </div>
+              </aside>
+            )}
+
+            {/* Divisor Vertical Místico com Estrela e Lua (apenas Desktop) */}
+            {categories.length > 0 && (
+              <div className="hidden lg:flex flex-col items-center py-4 select-none pointer-events-none" aria-hidden="true">
+                <span className="text-[#E5B842] text-sm mb-2">✦</span>
+                <div className="w-px flex-1 bg-gradient-to-b from-[#C59B27]/80 via-[#C59B27]/40 to-[#C59B27]/80" />
+                <span className="text-[#E5B842] text-xs my-2">⚜</span>
+                <div className="w-px flex-1 bg-gradient-to-b from-[#C59B27]/80 via-[#C59B27]/40 to-[#C59B27]/80" />
+                <span className="text-[#E5B842] text-sm mt-2">☾</span>
+              </div>
+            )}
+
+            {/* Área Principal das Cartas de Ingredientes */}
+            <div className="flex-1 min-w-0">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-24 gap-3 text-[#C59B27]">
+                  <RefreshCw size={26} className="animate-spin" />
+                  <p className="font-serif text-sm text-[#E5B842]">Consultando o grimório...</p>
+                </div>
+
+              ) : filtered.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
+                  <CauldronEmblem className="w-24 h-24 opacity-75" />
+                  <p className="font-serif text-base text-[#F5E6C8]">
+                    {items.length === 0
+                      ? 'O caldeirão está vazio. Adicione o primeiro ingrediente mágico!'
+                      : 'Nenhum ingrediente corresponde aos encantamentos de busca.'}
+                  </p>
+                </div>
+
+              ) : categoryFilter === 'all' && viewMode === 'grid' ? (
+                /* Vista em Grade Unificada de Cartas Mágicas (fiel à arte conceitual) */
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
+                  {filtered.map(item => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      viewMode="grid"
+                      onCycleStatus={handleCycleStatus}
+                      onSetStatus={handleSetStatus}
+                      onAdjustQty={adjustQty}
+                      onUpdateQtyValue={updateQtyValue}
+                      onEdit={setEditItem}
+                      onDelete={handleDeleteItem}
+                    />
+                  ))}
+                </div>
+
+              ) : (
+                /* Vista agrupada quando em Lista ou filtrada por seção */
+                <div className="flex flex-col gap-6">
+                  {grouped.map(([key, group]) => (
+                    <section key={key} aria-labelledby={`cat-${key}`}>
+                      <h2
+                        id={`cat-${key}`}
+                        className="font-serif text-xs sm:text-sm font-bold text-[#E5B842] uppercase tracking-wider mb-3 px-1 flex items-center gap-2"
+                      >
+                        <span>{group.label}</span>
+                        <span className="text-[#A89BC2] font-sans font-normal text-xs">
+                          ({group.items.length})
+                        </span>
+                      </h2>
+
+                      {viewMode === 'grid' ? (
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3.5 sm:gap-4">
+                          {group.items.map(item => (
+                            <ItemCard
+                              key={item.id}
+                              item={item}
+                              viewMode="grid"
+                              onCycleStatus={handleCycleStatus}
+                              onSetStatus={handleSetStatus}
+                              onAdjustQty={adjustQty}
+                              onUpdateQtyValue={updateQtyValue}
+                              onEdit={setEditItem}
+                              onDelete={handleDeleteItem}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          {group.items.map(item => (
+                            <ItemCard
+                              key={item.id}
+                              item={item}
+                              viewMode="compact"
+                              onCycleStatus={handleCycleStatus}
+                              onSetStatus={handleSetStatus}
+                              onAdjustQty={adjustQty}
+                              onUpdateQtyValue={updateQtyValue}
+                              onEdit={setEditItem}
+                              onDelete={handleDeleteItem}
+                            />
+                          ))}
+                        </div>
+                      )}
+                    </section>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FAB — Orbe Mágica "+ Adicionar" */}
+      <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-8 z-30">
+        <AddOrbButton onClick={() => setAddOpen(true)} />
       </div>
 
       {/* Modais */}
@@ -415,5 +411,56 @@ export function HomePage() {
         onSetStatus={handleSetStatus}
       />
     </div>
+  )
+}
+
+/**
+ * Botão de Categoria estilo Medalhão Alquímico com moldura dourada e folhas laterais
+ */
+function CategoryMedallion({ emoji, name, active, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group relative flex items-center flex-shrink-0 lg:w-full text-left focus:outline-none transition-transform active:scale-95"
+    >
+      {/* Ornamento de folhas à esquerda do medalhão */}
+      <svg
+        viewBox="0 0 24 44"
+        className="w-4 h-9 -mr-2 z-10 pointer-events-none select-none hidden sm:block"
+        fill="none"
+        aria-hidden="true"
+      >
+        <path d="M18 6 C8 14, 8 30, 18 38" stroke="#C59B27" strokeWidth="1.5" />
+        <path d="M14 14 C6 10, 4 18, 12 20 Z" fill="#2D6A4F" stroke="#C59B27" strokeWidth="0.9" />
+        <path d="M12 24 C4 22, 4 30, 12 30 Z" fill="#40916C" stroke="#C59B27" strokeWidth="0.9" />
+      </svg>
+
+      {/* Medalhão circular dourado */}
+      <div
+        className={cn(
+          'relative z-10 w-10 h-10 sm:w-11 sm:h-11 rounded-full flex items-center justify-center border-2 transition-all shadow-md flex-shrink-0',
+          active
+            ? 'grimoire-medallion-active border-[#FDE68A] ring-2 ring-[#D4A017]/50 shadow-[0_0_14px_rgba(212,160,23,0.45)]'
+            : 'grimoire-medallion border-[#C59B27]/80 group-hover:border-[#E5B842]'
+        )}
+      >
+        <span className="text-base sm:text-lg leading-none select-none">{emoji}</span>
+      </div>
+
+      {/* Placa horizontal com nome da seção */}
+      <div
+        className={cn(
+          'flex-1 -ml-3 pl-5 pr-3.5 py-1.5 sm:py-2 rounded-r-full border-y border-r transition-all min-w-0',
+          active
+            ? 'grimoire-plaque-active border-[#E5B842] shadow-[0_0_15px_rgba(212,160,23,0.25)]'
+            : 'grimoire-plaque border-[#C59B27]/55 group-hover:border-[#E5B842]'
+        )}
+      >
+        <span className="block font-serif font-semibold text-xs sm:text-sm truncate">
+          {name}
+        </span>
+      </div>
+    </button>
   )
 }
