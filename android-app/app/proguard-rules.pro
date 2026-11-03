@@ -1,0 +1,3 @@
+-keepattributes *Annotation*,InnerClasses,EnclosingMethod,Signature
+-keep class com.caldeiraodegaia.app.data.model.** { *; }
+-dontwarn java.awt.**
