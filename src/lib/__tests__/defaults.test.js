@@ -69,10 +69,10 @@ describe('src/lib/defaults.js', () => {
       expect(buildInviteUrl()).toBe('https://estoque-casa-five.vercel.app/')
     })
 
-    it('formata a mensagem de convite com código em negrito (*CODIGO*) e link com ?invite=CODIGO', () => {
+    it('formata a mensagem de convite com código em negrito e link com ?invite=CODIGO', () => {
       const msg = buildInviteMessage('Caldeirão TESTE', 'C99AB3')
       expect(msg).toBe(
-        '🫧 Oi! Te convido para o Caldeirão de Gaia — Caldeirão TESTE.\n\nUse o código *C99AB3*\nhttps://estoque-casa-five.vercel.app/?invite=C99AB3'
+        '🫧 Oi! Te convido para o Caldeirão de Gaia — Caldeirão TESTE.\n\nUse o código *C99AB3 ou entre pelo link:*\nhttps://estoque-casa-five.vercel.app/?invite=C99AB3'
       )
     })
   })

@@ -343,113 +343,133 @@ class ReceiptScannerManager(private val context: Context) {
             throw IllegalStateException("Não foi possível extrair os dados da nota fiscal. Tente uma foto mais nítida.")
         }
 
-        val cleanedJson = rawOutputText
-            .replace(Regex("^```json\\s*", RegexOption.IGNORE_CASE), "")
-            .replace(Regex("```\\s*$"), "")
-            .trim()
-
-        val parsed = runCatching {
-            SupabaseModule.json.decodeFromString<ParsedReceiptResponse>(cleanedJson)
-        }.getOrElse {
-            throw IllegalStateException("A resposta da leitura não pôde ser interpretada. Tente tirar outra foto da nota.")
-        }
-
-        val existingById = existingItems.associateBy { it.id }
-        val existingByNormName = existingItems.associateBy { FormatUtils.normalizeForMatch(it.name) }
-
-        val matchedMap = linkedMapOf<String, MatchedReceiptItem>()
-        val unmatchedList = mutableListOf<UnmatchedReceiptItem>()
-
-        for (entry in parsed.items) {
-            val qty = if (entry.quantity > 0.0) entry.quantity else 1.0
-            val cleanName = entry.cleanName.ifBlank { entry.rawText.ifBlank { "Item" } }.trim()
-
-            var matchedItem = entry.matchedItemId.takeIf { it.isNotBlank() }?.let { existingById[it] }
-            if (matchedItem == null) {
-                matchedItem = existingByNormName[FormatUtils.normalizeForMatch(cleanName)]
-            }
-
-            if (matchedItem != null) {
-                val prev = matchedMap[matchedItem.id]
-                if (prev != null) {
-                    val combinedQty = ((prev.addedQty + qty) * 1000.0).roundToInt() / 1000.0
-                    val updatedRawTexts = if (entry.rawText.isNotBlank() && !prev.rawTexts.contains(entry.rawText)) {
-                        prev.rawTexts + entry.rawText
-                    } else {
-                        prev.rawTexts
-                    }
-                    matchedMap[matchedItem.id] = prev.copy(
-                        addedQty = combinedQty,
-                        rawTexts = updatedRawTexts
-                    )
-                } else {
-                    matchedMap[matchedItem.id] = MatchedReceiptItem(
-                        itemId = matchedItem.id,
-                        item = matchedItem,
-                        productName = matchedItem.name,
-                        currentQty = max(0.0, matchedItem.qtyValue ?: 0.0),
-                        unit = matchedItem.qtyUnit.ifBlank { matchedItem.defaultUnit.ifBlank { entry.unit.ifBlank { "un" } } },
-                        addedQty = qty,
-                        rawTexts = if (entry.rawText.isNotBlank()) listOf(entry.rawText) else emptyList(),
-                        selected = true
-                    )
-                }
-            } else {
-                unmatchedList.add(
-                    UnmatchedReceiptItem(
-                        tempId = "${System.currentTimeMillis()}-${(1000..9999).random()}",
-                        rawText = entry.rawText,
-                        name = cleanName,
-                        brand = entry.brand.trim(),
-                        qty = qty,
-                        unit = entry.unit.ifBlank { "un" },
-                        categoryId = entry.suggestedCategoryId.ifBlank { categories.firstOrNull()?.id.orEmpty() },
-                        added = false
-                    )
-                )
-            }
-        }
-
-        ReceiptAnalysisResult(
-            storeName = parsed.storeName.orEmpty(),
-            matched = matchedMap.values.toList(),
-            unmatched = unmatchedList,
+        reconcileReceiptOutput(
+            rawOutputText = rawOutputText,
+            existingItems = existingItems,
+            categories = categories,
             ocrPreview = compressed.ocrText
         )
     }
 
-    /**
-     * Equivalente a `extractOutputText(data)` em `src/lib/receiptScanner.js`.
-     */
-    private fun extractOutputText(data: JsonObject): String {
-        val direct = data["output_text"]?.jsonPrimitive?.content?.trim()
-        if (!direct.isNullOrEmpty()) return direct
+    companion object {
+        /**
+         * Equivalente a `extractOutputText(data)` em `src/lib/receiptScanner.js`.
+         */
+        fun extractOutputText(data: JsonObject): String {
+            val direct = data["output_text"]?.jsonPrimitive?.content?.trim()
+            if (!direct.isNullOrEmpty()) return direct
 
-        val steps = data["steps"] as? JsonArray
-        if (steps != null) {
-            val texts = mutableListOf<String>()
-            for (stepEl in steps) {
-                val step = stepEl as? JsonObject ?: continue
-                if (step["type"]?.jsonPrimitive?.content == "model_output") {
-                    val contentArr = step["content"] as? JsonArray ?: continue
-                    for (partEl in contentArr) {
-                        val part = partEl as? JsonObject ?: continue
-                        if (part["type"]?.jsonPrimitive?.content == "text") {
-                            val txt = part["text"]?.jsonPrimitive?.content
-                            if (!txt.isNullOrBlank()) texts.add(txt)
+            val steps = data["steps"] as? JsonArray
+            if (steps != null) {
+                val texts = mutableListOf<String>()
+                for (stepEl in steps) {
+                    val step = stepEl as? JsonObject ?: continue
+                    if (step["type"]?.jsonPrimitive?.content == "model_output") {
+                        val contentArr = step["content"] as? JsonArray ?: continue
+                        for (partEl in contentArr) {
+                            val part = partEl as? JsonObject ?: continue
+                            if (part["type"]?.jsonPrimitive?.content == "text") {
+                                val txt = part["text"]?.jsonPrimitive?.content
+                                if (!txt.isNullOrBlank()) texts.add(txt)
+                            }
                         }
                     }
                 }
+                if (texts.isNotEmpty()) return texts.joinToString("\n").trim()
             }
-            if (texts.isNotEmpty()) return texts.joinToString("\n").trim()
+
+            val outputs = data["outputs"]?.jsonArray
+            if (!outputs.isNullOrEmpty()) {
+                val last = outputs.last() as? JsonObject
+                val txt = last?.get("text")?.jsonPrimitive?.content?.trim()
+                if (!txt.isNullOrEmpty()) return txt
+            }
+            return ""
         }
 
-        val outputs = data["outputs"]?.jsonArray
-        if (!outputs.isNullOrEmpty()) {
-            val last = outputs.last() as? JsonObject
-            val txt = last?.get("text")?.jsonPrimitive?.content?.trim()
-            if (!txt.isNullOrEmpty()) return txt
+        /**
+         * Faz o parse do JSON retornado pelo Gemini e reconcilia cada linha do cupom fiscal
+         * com o estoque atual (`existingItems`) e as categorias (`categories`).
+         */
+        fun reconcileReceiptOutput(
+            rawOutputText: String,
+            existingItems: List<InventoryItem>,
+            categories: List<CategoryDto>,
+            ocrPreview: String = ""
+        ): ReceiptAnalysisResult {
+            val cleanedJson = rawOutputText
+                .replace(Regex("^```json\\s*", RegexOption.IGNORE_CASE), "")
+                .replace(Regex("```\\s*$"), "")
+                .trim()
+
+            val parsed = runCatching {
+                SupabaseModule.json.decodeFromString<ParsedReceiptResponse>(cleanedJson)
+            }.getOrElse {
+                throw IllegalStateException("A resposta da leitura não pôde ser interpretada. Tente tirar outra foto da nota.")
+            }
+
+            val existingById = existingItems.associateBy { it.id }
+            val existingByNormName = existingItems.associateBy { FormatUtils.normalizeForMatch(it.name) }
+
+            val matchedMap = linkedMapOf<String, MatchedReceiptItem>()
+            val unmatchedList = mutableListOf<UnmatchedReceiptItem>()
+
+            for (entry in parsed.items) {
+                val qty = if (entry.quantity > 0.0) entry.quantity else 1.0
+                val cleanName = entry.cleanName.ifBlank { entry.rawText.ifBlank { "Item" } }.trim()
+
+                var matchedItem = entry.matchedItemId.takeIf { it.isNotBlank() }?.let { existingById[it] }
+                if (matchedItem == null) {
+                    matchedItem = existingByNormName[FormatUtils.normalizeForMatch(cleanName)]
+                }
+
+                if (matchedItem != null) {
+                    val prev = matchedMap[matchedItem.id]
+                    if (prev != null) {
+                        val combinedQty = ((prev.addedQty + qty) * 1000.0).roundToInt() / 1000.0
+                        val updatedRawTexts = if (entry.rawText.isNotBlank() && !prev.rawTexts.contains(entry.rawText)) {
+                            prev.rawTexts + entry.rawText
+                        } else {
+                            prev.rawTexts
+                        }
+                        matchedMap[matchedItem.id] = prev.copy(
+                            addedQty = combinedQty,
+                            rawTexts = updatedRawTexts
+                        )
+                    } else {
+                        matchedMap[matchedItem.id] = MatchedReceiptItem(
+                            itemId = matchedItem.id,
+                            item = matchedItem,
+                            productName = matchedItem.name,
+                            currentQty = max(0.0, matchedItem.qtyValue ?: 0.0),
+                            unit = matchedItem.qtyUnit.ifBlank { matchedItem.defaultUnit.ifBlank { entry.unit.ifBlank { "un" } } },
+                            addedQty = qty,
+                            rawTexts = if (entry.rawText.isNotBlank()) listOf(entry.rawText) else emptyList(),
+                            selected = true
+                        )
+                    }
+                } else {
+                    unmatchedList.add(
+                        UnmatchedReceiptItem(
+                            tempId = "${System.currentTimeMillis()}-${(1000..9999).random()}",
+                            rawText = entry.rawText,
+                            name = cleanName,
+                            brand = entry.brand.trim(),
+                            qty = qty,
+                            unit = entry.unit.ifBlank { "un" },
+                            categoryId = entry.suggestedCategoryId.ifBlank { categories.firstOrNull()?.id.orEmpty() },
+                            added = false
+                        )
+                    )
+                }
+            }
+
+            return ReceiptAnalysisResult(
+                storeName = parsed.storeName.orEmpty(),
+                matched = matchedMap.values.toList(),
+                unmatched = unmatchedList,
+                ocrPreview = ocrPreview
+            )
         }
-        return ""
     }
 }
